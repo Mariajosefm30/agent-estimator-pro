@@ -8,10 +8,16 @@ import { ActionsSection } from '@/components/estimator/sections/ActionsSection';
 import { TriggersSection } from '@/components/estimator/sections/TriggersSection';
 import { PromptToolsSection } from '@/components/estimator/sections/PromptToolsSection';
 import { PtuSection } from '@/components/estimator/sections/PtuSection';
+import { ViewModeToggle } from '@/components/estimator/sections/ViewModeToggle';
+import { CustomerStartingPointSection } from '@/components/estimator/sections/CustomerStartingPointSection';
+import { ContractContextSection } from '@/components/estimator/sections/ContractContextSection';
+import { UsageProfileSection } from '@/components/estimator/sections/UsageProfileSection';
+import { GuardrailsSection } from '@/components/estimator/sections/GuardrailsSection';
+import { ScenarioPresetsSection } from '@/components/estimator/sections/ScenarioPresetsSection';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useSaveScenario } from '@/hooks/useScenarios';
 import { calculateOutputs } from '@/lib/calculations';
-import { EstimatorInputs, DEFAULT_INPUTS } from '@/types/estimator';
+import { EstimatorInputs, DEFAULT_INPUTS, ViewMode } from '@/types/estimator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Save, RotateCcw, Info } from 'lucide-react';
@@ -43,6 +49,10 @@ export default function Estimator() {
 
   const handleInputChange = useCallback((updates: Partial<EstimatorInputs>) => {
     setInputs((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  const handleViewModeChange = useCallback((mode: ViewMode) => {
+    setInputs((prev) => ({ ...prev, viewMode: mode }));
   }, []);
 
   const handleReset = useCallback(() => {
@@ -77,7 +87,7 @@ export default function Estimator() {
       });
       
       navigate(`/results?id=${saved.id}`);
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error saving scenario',
         description: 'Please try again.',
@@ -96,6 +106,8 @@ export default function Estimator() {
     );
   }
 
+  const isSeller = inputs.viewMode === 'seller';
+
   return (
     <Layout>
       <div className="mb-6">
@@ -105,6 +117,12 @@ export default function Estimator() {
         <p className="text-muted-foreground mt-1">
           Estimate your Azure Consumption Units and Agent pre-purchase tier recommendation
         </p>
+      </div>
+
+      {/* View Mode Toggle */}
+      <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+        <ViewModeToggle value={inputs.viewMode} onChange={handleViewModeChange} />
+        <ScenarioPresetsSection inputs={inputs} onChange={handleInputChange} />
       </div>
 
       <Alert className="mb-6 border-primary/30 bg-primary/5">
@@ -118,6 +136,20 @@ export default function Estimator() {
       <div className="grid gap-6 lg:grid-cols-[1fr,380px]">
         {/* Left: Input Sections */}
         <div className="space-y-4">
+          {/* New Context Sections */}
+          <CustomerStartingPointSection inputs={inputs} onChange={handleInputChange} />
+          
+          {(inputs.customerContext.hasMACC || inputs.customerContext.hasCopilot) && (
+            <ContractContextSection inputs={inputs} onChange={handleInputChange} />
+          )}
+          
+          {isSeller && (
+            <UsageProfileSection inputs={inputs} onChange={handleInputChange} />
+          )}
+          
+          <GuardrailsSection inputs={inputs} onChange={handleInputChange} />
+
+          {/* Original Agent Input Sections */}
           <TrafficSection inputs={inputs} onChange={handleInputChange} />
           <KnowledgeSection inputs={inputs} onChange={handleInputChange} />
           <ActionsSection inputs={inputs} onChange={handleInputChange} />
@@ -174,7 +206,11 @@ export default function Estimator() {
 
         {/* Right: Totals Panel */}
         <div className="lg:sticky lg:top-20 lg:self-start">
-          <TotalsPanel outputs={outputs} />
+          <TotalsPanel 
+            outputs={outputs} 
+            viewMode={inputs.viewMode}
+            guardrails={inputs.guardrails}
+          />
         </div>
       </div>
     </Layout>
