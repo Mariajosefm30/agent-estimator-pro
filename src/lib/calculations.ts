@@ -1,4 +1,100 @@
-import { EstimatorInputs, EstimatorOutputs, Assumptions, AgentP3Tier } from '@/types/estimator';
+import { 
+  EstimatorInputs, 
+  EstimatorOutputs, 
+  Assumptions, 
+  AgentP3Tier,
+  VolatilityScore 
+} from '@/types/estimator';
+
+// Multipliers for P50/P90 based on workload intensity and type
+function getVariabilityMultipliers(inputs: EstimatorInputs): { p50: number; p90: number } {
+  const { workloadIntensity, workloadType, toolCallingPercent, longContextPercent } = inputs.usageVariability;
+  
+  // Base multipliers by intensity
+  let p50Base = 1.0;
+  let p90Base = 1.0;
+  
+  switch (workloadIntensity) {
+    case 'light':
+      p50Base = 0.85;
+      p90Base = 1.15;
+      break;
+    case 'medium':
+      p50Base = 1.0;
+      p90Base = 1.4;
+      break;
+    case 'heavy':
+      p50Base = 1.15;
+      p90Base = 1.8;
+      break;
+  }
+  
+  // Adjustments by workload type
+  switch (workloadType) {
+    case 'qa':
+      // Simple Q&A is predictable
+      break;
+    case 'summarization':
+      p90Base *= 1.1;
+      break;
+    case 'extraction':
+      p90Base *= 1.15;
+      break;
+    case 'multi_step_agent':
+      p50Base *= 1.2;
+      p90Base *= 1.5;
+      break;
+    case 'rag':
+      p90Base *= 1.25;
+      break;
+  }
+  
+  // Tool calling adds variability
+  const toolCallMultiplier = 1 + (toolCallingPercent / 100) * 0.3;
+  p90Base *= toolCallMultiplier;
+  
+  // Long context adds variability
+  const longContextMultiplier = 1 + (longContextPercent / 100) * 0.2;
+  p90Base *= longContextMultiplier;
+  
+  return { p50: p50Base, p90: p90Base };
+}
+
+function calculateVolatilityScore(inputs: EstimatorInputs): VolatilityScore {
+  const { workloadIntensity, workloadType, toolCallingPercent, longContextPercent } = inputs.usageVariability;
+  
+  let score = 0;
+  
+  // Intensity contribution
+  switch (workloadIntensity) {
+    case 'light': score += 1; break;
+    case 'medium': score += 2; break;
+    case 'heavy': score += 3; break;
+  }
+  
+  // Workload type contribution
+  switch (workloadType) {
+    case 'qa': score += 0; break;
+    case 'summarization': score += 1; break;
+    case 'extraction': score += 1; break;
+    case 'multi_step_agent': score += 3; break;
+    case 'rag': score += 2; break;
+  }
+  
+  // Tool calling and context contribution
+  if (toolCallingPercent > 40) score += 2;
+  else if (toolCallingPercent > 20) score += 1;
+  
+  if (longContextPercent > 30) score += 1;
+  
+  // Guardrails reduce effective volatility concern
+  if (inputs.guardrails.monthlyCapEnabled) score -= 1;
+  if (inputs.guardrails.throttlingEnabled) score -= 1;
+  
+  if (score <= 3) return 'low';
+  if (score <= 6) return 'medium';
+  return 'high';
+}
 
 export function calculateOutputs(inputs: EstimatorInputs, assumptions: Assumptions): EstimatorOutputs {
   // Section A - Traffic calculations
@@ -13,7 +109,6 @@ export function calculateOutputs(inputs: EstimatorInputs, assumptions: Assumptio
   const annualTenantGraphQueries = annualKnowledgeQueries * tenantGraphPctDecimal;
   const annualNonTenantQueries = annualKnowledgeQueries - annualTenantGraphQueries;
   
-  // Tenant graph query credits = 10 + 2 (tenant grounding + generative answers)
   const tenantGraphCreditsPerQuery = 
     assumptions.tenant_graph_grounding_credits + assumptions.generative_answer_credits;
   
@@ -58,16 +153,66 @@ export function calculateOutputs(inputs: EstimatorInputs, assumptions: Assumptio
   // Section F - Foundry PTU
   const annualPtuHours = inputs.ptuHoursPerMonth * 12;
 
-  // Cost calculations
+  // Base cost calculations
   const copilotPaygCost = annualCopilotCredits * assumptions.copilot_credit_usd;
   const foundryPaygCost = annualPtuHours * assumptions.ptu_usd_per_hour;
   const totalPaygCostUsd = copilotPaygCost + foundryPaygCost;
 
-  // ACUs required (rounded up)
+  // Get variability multipliers
+  const { p50, p90 } = getVariabilityMultipliers(inputs);
+  
+  // Calculate P50/P90 ranges (monthly costs)
+  const baseMonthly = totalPaygCostUsd / 12;
+  const p50MonthlyCost = baseMonthly * p50;
+  const p90MonthlyCost = baseMonthly * p90;
+  
+  // ACUs (annual) with ranges
   const acusRequired = Math.ceil(totalPaygCostUsd);
+  const p50ACU = Math.ceil(totalPaygCostUsd * p50);
+  const p90ACU = Math.ceil(totalPaygCostUsd * p90);
+  
+  // Volatility score
+  const volatilityScore = calculateVolatilityScore(inputs);
+  
+  // MACC Coverage calculations
+  let maccFundedAmountP50 = 0;
+  let maccFundedAmountP90 = 0;
+  let netNewCashP50 = p50MonthlyCost * 12;
+  let netNewCashP90 = p90MonthlyCost * 12;
+  let monthsOfRunwayFromMACC: number | null = null;
+  
+  if (inputs.customerContext.hasMACC && inputs.customerContext.maccRemaining) {
+    const maccRemaining = inputs.customerContext.maccRemaining;
+    const annualP50 = p50MonthlyCost * 12;
+    const annualP90 = p90MonthlyCost * 12;
+    
+    // MACC can fund up to the remaining amount
+    maccFundedAmountP50 = Math.min(maccRemaining, annualP50);
+    maccFundedAmountP90 = Math.min(maccRemaining, annualP90);
+    
+    // Net new cash = what's left after MACC
+    netNewCashP50 = Math.max(0, annualP50 - maccRemaining);
+    netNewCashP90 = Math.max(0, annualP90 - maccRemaining);
+    
+    // Calculate runway
+    if (inputs.customerContext.currentMonthlyBurn && inputs.customerContext.currentMonthlyBurn > 0) {
+      const totalMonthlyBurn = inputs.customerContext.currentMonthlyBurn + p50MonthlyCost;
+      monthsOfRunwayFromMACC = Math.floor(maccRemaining / totalMonthlyBurn);
+    } else {
+      monthsOfRunwayFromMACC = Math.floor(maccRemaining / p50MonthlyCost);
+    }
+  }
+  
+  // Guardrail capping
+  let cappedP90MonthlyCost: number | null = null;
+  const worstCaseUncapped = p90MonthlyCost;
+  
+  if (inputs.guardrails.monthlyCapEnabled && inputs.guardrails.monthlyCapAmount) {
+    cappedP90MonthlyCost = Math.min(p90MonthlyCost, inputs.guardrails.monthlyCapAmount);
+  }
 
   // Find recommended tier
-  const tiers = assumptions.agent_p3_tiers.sort((a, b) => a.acus - b.acus);
+  const tiers = [...assumptions.agent_p3_tiers].sort((a, b) => a.acus - b.acus);
   let recommendedTier: AgentP3Tier | null = null;
   
   for (const tier of tiers) {
@@ -77,7 +222,6 @@ export function calculateOutputs(inputs: EstimatorInputs, assumptions: Assumptio
     }
   }
   
-  // If no tier is large enough, recommend the largest one
   if (!recommendedTier && tiers.length > 0) {
     recommendedTier = tiers[tiers.length - 1];
   }
@@ -107,6 +251,18 @@ export function calculateOutputs(inputs: EstimatorInputs, assumptions: Assumptio
     copilotPaygCost,
     foundryPaygCost,
     totalPaygCostUsd,
+    p50ACU,
+    p90ACU,
+    p50MonthlyCost,
+    p90MonthlyCost,
+    volatilityScore,
+    maccFundedAmountP50,
+    maccFundedAmountP90,
+    netNewCashP50,
+    netNewCashP90,
+    monthsOfRunwayFromMACC,
+    cappedP90MonthlyCost,
+    worstCaseUncapped,
     acusRequired,
     recommendedTier,
     estimatedPlanCost,

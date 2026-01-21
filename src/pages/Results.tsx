@@ -187,6 +187,24 @@ export default function Results() {
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="p-4 rounded-lg bg-muted/50">
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <DollarSign className="h-4 w-4" />
+                  <span className="text-sm">P50 Monthly Cost</span>
+                </div>
+                <p className="text-2xl font-bold text-foreground">
+                  {formatCurrency(scenario.outputs.p50MonthlyCost || scenario.outputs.totalPaygCostUsd / 12)}
+                </p>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <DollarSign className="h-4 w-4" />
+                  <span className="text-sm">P90 Monthly Cost</span>
+                </div>
+                <p className="text-2xl font-bold text-foreground">
+                  {formatCurrency(scenario.outputs.p90MonthlyCost || scenario.outputs.totalPaygCostUsd / 12 * 1.4)}
+                </p>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
                   <Coins className="h-4 w-4" />
                   <span className="text-sm">Annual Copilot Credits</span>
                 </div>
@@ -196,29 +214,11 @@ export default function Results() {
               </div>
               <div className="p-4 rounded-lg bg-muted/50">
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm">Annual PTU Hours</span>
-                </div>
-                <p className="text-2xl font-bold text-foreground">
-                  {formatNumber(scenario.outputs.annualPtuHours)}
-                </p>
-              </div>
-              <div className="p-4 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <DollarSign className="h-4 w-4" />
-                  <span className="text-sm">PAYG Cost (USD)</span>
-                </div>
-                <p className="text-2xl font-bold text-foreground">
-                  {formatCurrency(scenario.outputs.totalPaygCostUsd)}
-                </p>
-              </div>
-              <div className="p-4 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
                   <Zap className="h-4 w-4" />
-                  <span className="text-sm">ACUs Required</span>
+                  <span className="text-sm">ACUs Required (P50/P90)</span>
                 </div>
                 <p className="text-2xl font-bold text-foreground">
-                  {formatNumber(scenario.outputs.acusRequired)}
+                  {formatNumber(scenario.outputs.p50ACU || scenario.outputs.acusRequired)} - {formatNumber(scenario.outputs.p90ACU || scenario.outputs.acusRequired * 1.4)}
                 </p>
               </div>
             </CardContent>
