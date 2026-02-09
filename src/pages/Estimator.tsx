@@ -38,7 +38,13 @@ import {
 } from '@/components/ui/alert';
 
 export default function Estimator() {
-  const [inputs, setInputs] = useState<EstimatorInputs>(DEFAULT_INPUTS);
+  const [inputs, setInputs] = useState<EstimatorInputs>(() => {
+    try {
+      const stored = sessionStorage.getItem('survey_inputs');
+      if (stored) return JSON.parse(stored) as EstimatorInputs;
+    } catch { /* ignore */ }
+    return DEFAULT_INPUTS;
+  });
   const [scenarioName, setScenarioName] = useState('');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   
