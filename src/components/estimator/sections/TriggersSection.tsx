@@ -14,6 +14,7 @@ export function TriggersSection({ inputs, onChange }: TriggersSectionProps) {
       title="Autonomous Triggers"
       description="Configure event-driven autonomous agent triggers"
       icon={<Zap className="h-4 w-4" />}
+      infoText="Autonomous triggers allow the agent to act proactively based on events (e.g., a new ticket, a threshold alert, a scheduled check). Each trigger run consumes credits independently of user-initiated queries. This section captures the number of configured triggers and their monthly execution frequency to model autonomous agent costs."
     >
       <div className="grid gap-6 sm:grid-cols-2">
         <InputField

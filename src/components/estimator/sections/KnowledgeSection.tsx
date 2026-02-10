@@ -14,6 +14,7 @@ export function KnowledgeSection({ inputs, onChange }: KnowledgeSectionProps) {
       title="Agent Knowledge"
       description="Configure knowledge grounding and generative answers"
       icon={<BookOpen className="h-4 w-4" />}
+      infoText="Knowledge grounding determines how the agent retrieves and uses enterprise data to answer queries. Tenant graph grounding (Microsoft Graph) costs 10 credits per query plus 2 generative answer credits, while non-tenant grounding costs 2 credits per query. The split between these two affects total Copilot Credit consumption significantly."
     >
       <div className="grid gap-6">
         <InputField

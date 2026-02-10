@@ -1,6 +1,7 @@
+import { EstimatorSection } from '../EstimatorSection';
 import { EstimatorInputs, CustomerStartingPoint } from '@/types/estimator';
 import { cn } from '@/lib/utils';
-import { Check, Building2, CreditCard, Bot, Layers } from 'lucide-react';
+import { Check, Building2, CreditCard, Bot, Layers, UserCheck } from 'lucide-react';
 
 interface CustomerStartingPointSectionProps {
   inputs: EstimatorInputs;
@@ -55,8 +56,12 @@ export function CustomerStartingPointSection({ inputs, onChange }: CustomerStart
   };
 
   return (
-    <div className="space-y-3">
-      <div className="text-sm font-medium text-foreground">Customer Starting Point</div>
+    <EstimatorSection
+      title="Customer Starting Point"
+      description="Select the customer's current Microsoft relationship"
+      icon={<UserCheck className="h-4 w-4" />}
+      infoText="This section determines the customer's existing Microsoft commitments (MACC and/or Copilot). It shapes how costs are calculated — MACC-funded usage offsets net-new cash requirements, and Copilot credits may overlap with Agent P3 consumption. Select the option that best matches the customer's current state."
+    >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {startingPoints.map(({ id, label, description, icon: Icon }) => {
           const isSelected = inputs.customerContext.startingPoint === id;
@@ -95,6 +100,6 @@ export function CustomerStartingPointSection({ inputs, onChange }: CustomerStart
           );
         })}
       </div>
-    </div>
+    </EstimatorSection>
   );
 }

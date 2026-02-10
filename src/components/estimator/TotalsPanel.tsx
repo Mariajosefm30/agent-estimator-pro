@@ -1,4 +1,4 @@
-import { EstimatorOutputs, ViewMode, Guardrails } from '@/types/estimator';
+import { EstimatorOutputs, Guardrails } from '@/types/estimator';
 import { formatNumber, formatCurrency, formatPercent } from '@/lib/calculations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,24 +12,16 @@ import {
   AlertTriangle,
   Shield,
   Check,
-  ChevronDown,
 } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
 
 interface TotalsPanelProps {
   outputs: EstimatorOutputs;
-  viewMode: ViewMode;
   guardrails: Guardrails;
 }
 
@@ -73,13 +65,10 @@ function CostRangeBar({ p50: _p50, p90: _p90, capped }: { p50: number; p90: numb
   );
 }
 
-export function TotalsPanel({ outputs, viewMode, guardrails }: TotalsPanelProps) {
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+export function TotalsPanel({ outputs, guardrails }: TotalsPanelProps) {
   const hasSavings = outputs.estimatedSavings > 0;
   const hasMACC = outputs.maccFundedAmountP50 > 0 || outputs.maccFundedAmountP90 > 0;
-  const isSeller = viewMode === 'seller';
 
-  // Count enabled guardrails
   const enabledGuardrails = [
     guardrails.monthlyCapEnabled && 'Monthly cap',
     guardrails.dailyCapEnabled && 'Daily cap',
@@ -159,8 +148,8 @@ export function TotalsPanel({ outputs, viewMode, guardrails }: TotalsPanelProps)
           </>
         )}
 
-        {/* Budget Predictability Panel (Seller Only) */}
-        {isSeller && enabledGuardrails.length > 0 && (
+        {/* Budget Predictability Panel */}
+        {enabledGuardrails.length > 0 && (
           <>
             <div className="h-px bg-border" />
             <div className="space-y-2">
@@ -180,8 +169,8 @@ export function TotalsPanel({ outputs, viewMode, guardrails }: TotalsPanelProps)
           </>
         )}
 
-        {/* Worst-case Uncapped (Seller Only or Advanced) */}
-        {isSeller && outputs.cappedP90MonthlyCost && (
+        {/* Worst-case Uncapped */}
+        {outputs.cappedP90MonthlyCost && (
           <div className="p-2 rounded-md bg-yellow-500/10 border border-yellow-500/20">
             <div className="flex items-center gap-2 text-xs text-yellow-700">
               <AlertTriangle className="h-3 w-3" />
@@ -292,34 +281,10 @@ export function TotalsPanel({ outputs, viewMode, guardrails }: TotalsPanelProps)
           </div>
         )}
 
-        {/* Advanced (Customer Mode) */}
-        {!isSeller && outputs.cappedP90MonthlyCost && (
-          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <ChevronDown className={cn(
-                "h-4 w-4 transition-transform",
-                advancedOpen && "rotate-180"
-              )} />
-              Advanced
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-2">
-              <div className="p-2 rounded-md bg-yellow-500/10 border border-yellow-500/20">
-                <div className="flex items-center gap-2 text-xs text-yellow-700">
-                  <AlertTriangle className="h-3 w-3" />
-                  <span>Worst-case uncapped: {formatCurrency(outputs.worstCaseUncapped)}/mo</span>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-
         {/* Objection Handling Microcopy */}
         <div className="pt-2">
           <p className="text-xs text-muted-foreground text-center italic">
-            {isSeller 
-              ? "ACU drawdown depends on workload intensity, turns, and tool-calling. This estimator models variability via P50/P90 to support budgeting and avoids false precision."
-              : "Your usage can vary. We show a typical and high-usage range to help you plan safely."
-            }
+            ACU drawdown depends on workload intensity, turns, and tool-calling. This estimator models variability via P50/P90 to support budgeting and avoids false precision.
           </p>
         </div>
 

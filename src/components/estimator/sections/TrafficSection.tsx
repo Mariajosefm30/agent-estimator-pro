@@ -14,6 +14,7 @@ export function TrafficSection({ inputs, onChange }: TrafficSectionProps) {
       title="Traffic"
       description="Define your expected user base and query volume"
       icon={<Users className="h-4 w-4" />}
+      infoText="Traffic defines the total query volume flowing through your agent. Monthly active users multiplied by queries per user determines total monthly and annual query counts. These numbers are the foundation for all downstream credit calculations — knowledge grounding, actions, triggers, and prompt tools all scale proportionally to total queries."
     >
       <div className="grid gap-6 sm:grid-cols-2">
         <InputField
