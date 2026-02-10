@@ -58,18 +58,28 @@ export default function Assumptions() {
       
       if (error) throw error;
       
+      const updates: string[] = [];
+      
+      if (data?.copilotCreditPrice) {
+        setFormData((prev) => ({ ...prev, copilot_credit_usd: data.copilotCreditPrice }));
+        updates.push(`Copilot credit: $${data.copilotCreditPrice}`);
+      }
+      
       if (data?.ptuPrice) {
         setFormData((prev) => ({ ...prev, ptu_usd_per_hour: data.ptuPrice }));
-        toast({
-          title: 'Prices updated',
-          description: `PTU rate updated to $${data.ptuPrice}/hour`,
-        });
-      } else {
-        toast({
-          title: 'Price fetch completed',
-          description: 'Prices have been cached. Check retail_prices_cache for details.',
-        });
+        updates.push(`PTU: $${data.ptuPrice}/hr`);
       }
+      
+      const querySummary = data?.queries 
+        ? Object.entries(data.queries).map(([k, v]: [string, any]) => `${k}: ${v.count} items`).join(', ')
+        : '';
+      
+      toast({
+        title: updates.length > 0 ? 'Live prices applied' : 'Prices fetched (no updates)',
+        description: updates.length > 0 
+          ? updates.join(' | ') 
+          : `Cached ${querySummary}. PTU pricing requires direct Microsoft quote.`,
+      });
       
       refetch();
     } catch (error) {
