@@ -43,6 +43,7 @@ export function UsageProfileSection({ inputs, onChange }: UsageProfileSectionPro
       title="Usage Profile (Ranges)"
       description="Configure workload patterns for P50/P90 estimates"
       icon={<Activity className="h-4 w-4" />}
+      infoText="This section models how the agent will be used in production. Workload type, intensity, and tool-calling frequency all affect token consumption and cost variability. These inputs drive the P50 (typical) and P90 (high-usage) range calculations, giving finance teams a realistic budget window instead of a single-point estimate."
     >
       <div className="space-y-6">
         {/* Workload Type */}

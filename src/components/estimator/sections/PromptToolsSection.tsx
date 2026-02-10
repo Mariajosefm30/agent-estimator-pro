@@ -18,6 +18,7 @@ export function PromptToolsSection({ inputs, onChange }: PromptToolsSectionProps
       description="Configure AI prompt tools and model tiers"
       icon={<MessageSquare className="h-4 w-4" />}
       defaultOpen={false}
+      infoText="Prompt tools enable the agent to use additional AI model capabilities beyond standard responses. Credits vary by model tier: Basic (1 credit/10 responses), Standard (15 credits/10 responses), and Premium (100 credits/10 responses). Enable this if your agent uses custom AI prompts or advanced generative features."
     >
       <div className="space-y-6">
         <div className="flex items-center justify-between">

@@ -14,6 +14,7 @@ export function ActionsSection({ inputs, onChange }: ActionsSectionProps) {
       title="Agent Actions & Topics"
       description="Configure actions, flows, and Power Automate integrations"
       icon={<Workflow className="h-4 w-4" />}
+      infoText="Actions and topics represent the agent's ability to perform tasks beyond answering questions. Each action-triggering query invokes an average of 5 actions, each consuming credits. Power Automate flow runs are counted separately. This section models the operational cost of agent automation and workflow orchestration."
     >
       <div className="grid gap-6">
         <InputField

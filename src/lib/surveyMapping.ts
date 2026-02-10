@@ -100,9 +100,43 @@ export function mapSurveyToInputs(answers: SurveyAnswers): EstimatorInputs {
     };
   }
 
-  // Executive role → customer mode
-  if (answers.role_type === 'executive') {
-    inputs.viewMode = 'customer';
+  // Always seller mode
+  inputs.viewMode = 'seller';
+
+  // Map use case to trigger/flow estimates
+  const triggerMap: Record<string, { triggersCount: number; triggerRunsPerMonth: number }> = {
+    it_ops: { triggersCount: 5, triggerRunsPerMonth: 500 },
+    customer_support: { triggersCount: 3, triggerRunsPerMonth: 200 },
+    employee_support: { triggersCount: 2, triggerRunsPerMonth: 100 },
+    security_compliance: { triggersCount: 4, triggerRunsPerMonth: 300 },
+    finance_proc: { triggersCount: 3, triggerRunsPerMonth: 250 },
+    custom_workflows: { triggersCount: 6, triggerRunsPerMonth: 400 },
+  };
+  const triggerConfig = triggerMap[answers.use_case];
+  if (triggerConfig) {
+    inputs.triggersCount = triggerConfig.triggersCount;
+    inputs.triggerRunsPerMonth = triggerConfig.triggerRunsPerMonth;
+  }
+
+  // Map volume to flow runs
+  const flowRunMap: Record<string, number> = {
+    '0-1000': 100,
+    '1000-10000': 500,
+    '10000-50000': 2000,
+    '50000-200000': 5000,
+    '200000+': 10000,
+  };
+  inputs.flowRunsPerMonth = flowRunMap[answers.volume] ?? DEFAULT_INPUTS.flowRunsPerMonth;
+
+  // Map complexity to prompt tools
+  if (answers.complexity === 'high') {
+    inputs.usePromptTools = true;
+    inputs.promptModelType = 'premium';
+    inputs.promptResponsesPerMonth = Math.round(inputs.monthlyUsers * inputs.queriesPerUserPerMonth * 0.1);
+  } else if (answers.complexity === 'medium') {
+    inputs.usePromptTools = true;
+    inputs.promptModelType = 'standard';
+    inputs.promptResponsesPerMonth = Math.round(inputs.monthlyUsers * inputs.queriesPerUserPerMonth * 0.05);
   }
 
   return inputs;

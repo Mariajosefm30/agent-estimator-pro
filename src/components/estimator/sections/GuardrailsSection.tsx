@@ -5,6 +5,7 @@ import { Shield, Check } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface GuardrailsSectionProps {
   inputs: EstimatorInputs;
@@ -45,9 +46,9 @@ export function GuardrailsSection({ inputs, onChange }: GuardrailsSectionProps) 
       title="Budget Guardrails"
       description="Configure spending controls and access policies"
       icon={<Shield className="h-4 w-4" />}
+      infoText="Budget guardrails let you cap ACU consumption at monthly or daily limits, enable role-based access control (RBAC), throttle request rates, and isolate dev/prod environments. When caps are enabled, the P90 cost estimate is clamped to the cap amount, giving finance teams a hard ceiling for budget planning. These controls directly reduce the volatility score shown in the summary."
     >
       <div className="space-y-4">
-        {/* Summary Badge */}
         {enabledCount > 0 && (
           <div className="flex items-center gap-2 p-2 rounded-md bg-primary/5 border border-primary/20 w-fit">
             <Check className="h-4 w-4 text-primary" />

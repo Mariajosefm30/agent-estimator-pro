@@ -30,6 +30,7 @@ export function ContractContextSection({ inputs, onChange }: ContractContextSect
       title="Contract Context (MACC / Copilot)"
       description="Define existing Microsoft commitments"
       icon={<FileText className="h-4 w-4" />}
+      infoText="This section captures the customer's existing Microsoft Azure Consumption Commitment (MACC) balance, burn rate, and any negotiated discounts. These values determine how much of the estimated agent cost can be funded from existing commitments versus requiring net-new cash. If the customer has a Copilot license, credits may overlap with Agent P3 consumption."
     >
       <div className="space-y-4">
         {showMACCFields && (
@@ -83,14 +84,6 @@ export function ContractContextSection({ inputs, onChange }: ContractContextSect
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Customer has existing Microsoft Copilot license. Credits may overlap.
-            </p>
-          </div>
-        )}
-
-        {!showMACCFields && !showCopilotIndicator && (
-          <div className="p-4 rounded-lg bg-muted/50 text-center">
-            <p className="text-sm text-muted-foreground">
-              Select a starting point above to configure contract context.
             </p>
           </div>
         )}

@@ -14,6 +14,7 @@ export function PtuSection({ inputs, onChange }: PtuSectionProps) {
       title="Foundry PTU Usage"
       description="Azure AI Foundry Provisioned Throughput Units"
       icon={<Cpu className="h-4 w-4" />}
+      infoText="Provisioned Throughput Units (PTU) provide dedicated model capacity in Azure AI Foundry. Unlike pay-as-you-go, PTU hours represent reserved compute. When Microsoft applies benefits, PTU reservations are applied first before Copilot Credit P3 and Agent pre-purchase plans. Include PTU hours if the customer plans to use dedicated model deployments."
     >
       <div className="grid gap-6">
         <InputField
