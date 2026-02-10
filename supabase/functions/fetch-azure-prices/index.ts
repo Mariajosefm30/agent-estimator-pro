@@ -33,15 +33,15 @@ interface AzurePricesResponse {
 // Queries matching the Azure MCP Server's get_prices tool
 const PRICING_QUERIES = [
   {
-    // PTU pricing for GPT-4o (Copilot Studio uses this under the hood)
-    name: "PTU - Azure OpenAI GPT-4o",
-    filter: `serviceName eq 'Azure OpenAI Service' and skuName eq 'Provisioned Managed' and meterName eq 'GPT-4o PTU' and currencyCode eq 'USD' and armRegionName eq 'eastus'`,
+    // PTU pricing - broad search for any provisioned throughput
+    name: "PTU - Azure OpenAI Provisioned",
+    filter: `serviceName eq 'Azure OpenAI Service' and contains(meterName, 'PTU') and currencyCode eq 'USD'`,
     target_field: "ptu_usd_per_hour",
   },
   {
-    // Fallback: PTU general provisioned
-    name: "PTU - Provisioned Throughput Unit",
-    filter: `serviceName eq 'Azure OpenAI Service' and contains(meterName, 'Provisioned') and contains(meterName, 'Throughput') and currencyCode eq 'USD' and armRegionName eq 'eastus'`,
+    // Fallback: any provisioned managed SKU
+    name: "PTU - Provisioned Managed",
+    filter: `serviceName eq 'Azure OpenAI Service' and contains(skuName, 'Provisioned') and currencyCode eq 'USD' and armRegionName eq 'eastus'`,
     target_field: "ptu_usd_per_hour",
   },
   {
