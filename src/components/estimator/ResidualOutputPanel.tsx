@@ -3,19 +3,19 @@ import { formatCurrency, formatPercent } from '@/lib/calculations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  TrendingDown, Coins, ArrowRight, Sparkles, Lightbulb, ShieldCheck, AlertTriangle, CheckCircle2,
+  TrendingDown, Coins, Sparkles, Lightbulb, ShieldCheck, AlertTriangle, CheckCircle2, Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ResidualOutputPanelProps {
   outputs: ResidualOutputs;
   hasMACC: boolean;
+  maccBurnPct: number;
 }
 
-export function ResidualOutputPanel({ outputs, hasMACC }: ResidualOutputPanelProps) {
+export function ResidualOutputPanel({ outputs, hasMACC, maccBurnPct }: ResidualOutputPanelProps) {
   const hasSavings = outputs.p3Savings > 0;
   const residualIsZero = outputs.totalResidualRetailCost <= 0;
-  const residualIsLow = !residualIsZero && outputs.recommendedTier !== null && outputs.totalResidualRetailCost < (outputs.recommendedTier?.acus ?? 0) * 0.1;
 
   return (
     <Card className="border-2 border-primary/20 overflow-hidden">
@@ -29,6 +29,19 @@ export function ResidualOutputPanel({ outputs, hasMACC }: ResidualOutputPanelPro
         </p>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
+
+        {/* P3 Coverage Explanation */}
+        <div className="p-3 rounded-lg bg-muted/30 border border-border">
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              <span className="font-medium text-foreground">Understanding P3 Coverage:</span>{' '}
+              P3 provides a unified pool of Agent Commit Units (ACUs) for{' '}
+              <strong>Microsoft Copilot Studio</strong> and <strong>Azure AI Foundry</strong>.
+              Other services like Fabric and GitHub are managed separately and do not decrement P3 ACUs.
+            </p>
+          </div>
+        </div>
 
         {/* Summary Card */}
         <div className="space-y-2">
@@ -91,18 +104,18 @@ export function ResidualOutputPanel({ outputs, hasMACC }: ResidualOutputPanelPro
         )}
 
         {/* MACC Contribution */}
-        {hasMACC && outputs.p3Cost > 0 && (
+        {hasMACC && outputs.maccBurnAmount > 0 && (
           <>
             <div className="h-px bg-border" />
             <div className="p-3 rounded-lg bg-muted/30 border border-border space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <Coins className="h-4 w-4 text-primary" />
-                MACC Contribution
+                MACC Impact
               </div>
               <p className="text-sm text-foreground">
                 This P3 purchase contributes{' '}
-                <span className="font-semibold">{formatCurrency(outputs.p3Cost)}</span>{' '}
-                towards your MACC commitment.
+                <span className="font-semibold">{formatCurrency(outputs.maccBurnAmount)}</span>{' '}
+                ({maccBurnPct}% of P3 cost) towards your MACC commitment, helping you strategically draw down your annual spend.
               </p>
             </div>
           </>
@@ -154,7 +167,9 @@ function DynamicRecommendation({ outputs }: { outputs: ResidualOutputs }) {
       <div className="p-3 rounded-lg bg-muted/30 border border-border flex items-start gap-2">
         <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))] mt-0.5 flex-shrink-0" />
         <p className="text-xs text-foreground leading-relaxed">
-          <span className="font-medium">Great news!</span> Your current commitments fully cover estimated AI usage. P3 is not needed at this time.
+          <span className="font-medium">Guidance:</span> Your current commitments fully cover your estimated AI usage.
+          P3 is not needed at this time. Focus on maximizing your existing Foundry PTU Reservations and Copilot Credit
+          Pre-Purchase Plan benefits. This scenario indicates excellent optimization of current resources.
         </p>
       </div>
     );
@@ -165,7 +180,10 @@ function DynamicRecommendation({ outputs }: { outputs: ResidualOutputs }) {
       <div className="p-3 rounded-lg bg-muted/30 border border-border flex items-start gap-2">
         <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
         <p className="text-xs text-foreground leading-relaxed">
-          <span className="font-medium">Note:</span> Existing commitments cover most AI usage. P3 may not be cost-effective for the small residual. Consider PAYG, or re-evaluate if future usage growth would justify P3.
+          <span className="font-medium">Guidance:</span> Your existing commitments cover most of your AI usage.
+          P3 may not be the most cost-effective option for the small residual workload. Consider using PAYG for
+          the remaining amount, or re-evaluate P3 if future usage is expected to increase significantly.
+          Always compare the P3 tier cost against the PAYG cost of the residual to ensure optimal value.
         </p>
       </div>
     );
@@ -175,7 +193,10 @@ function DynamicRecommendation({ outputs }: { outputs: ResidualOutputs }) {
     <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 flex items-start gap-2">
       <ShieldCheck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
       <p className="text-xs text-foreground leading-relaxed">
-        <span className="font-medium">P3 is highly recommended</span> to cover the remaining AI workload, maximize savings, and provide flexible coverage across Foundry and Copilot.
+        <span className="font-medium">Guidance:</span> P3 is highly recommended here. It efficiently covers your
+        remaining AI workload, maximizes savings by consolidating Copilot and Foundry usage, and provides a
+        predictable way to draw down your MACC commitment. This is ideal for customers scaling their AI initiatives
+        across both platforms, offering both cost efficiency and operational simplicity.
       </p>
     </div>
   );
