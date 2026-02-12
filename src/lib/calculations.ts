@@ -319,6 +319,11 @@ export function calculateResidualOutputs(inputs: ResidualInputs, assumptions: As
     ? (p3Savings / totalResidualRetailCost) * 100
     : 0;
 
+  // MACC burn calculation
+  const maccBurnAmount = inputs.hasMACC
+    ? p3Cost * (inputs.maccBurnPct / 100)
+    : 0;
+
   return {
     totalCopilotQueries,
     estimatedCopilotRetailCost,
@@ -335,6 +340,7 @@ export function calculateResidualOutputs(inputs: ResidualInputs, assumptions: As
     p3Cost,
     p3Savings,
     p3DiscountPct,
+    maccBurnAmount,
   };
 }
 
