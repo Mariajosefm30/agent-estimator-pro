@@ -201,9 +201,10 @@ export interface ResidualInputs {
   existingPtuReservations: number;
   hasMACC: boolean;
   maccBurnPct: number;
-  // Other AI Services (context only, not P3 decrement)
-  fabricCapacityUnits: number;
-  githubCopilotLicenses: number;
+  // Fabric & GitHub now contribute to P3 ACU pool
+  fabricMonthlySpend: number;
+  githubCopilotSeats: number;
+  githubCopilotPricePerSeat: number;
 }
 
 export interface ResidualOutputs {
@@ -211,6 +212,8 @@ export interface ResidualOutputs {
   totalCopilotQueries: number;
   estimatedCopilotRetailCost: number;
   estimatedFoundryRetailCost: number;
+  estimatedFabricRetailCost: number;
+  estimatedGithubRetailCost: number;
   totalEstimatedRetailCost: number;
   // Existing coverage
   foundryCoveredByReservation: number;
@@ -238,8 +241,9 @@ export const DEFAULT_RESIDUAL_INPUTS: ResidualInputs = {
   existingPtuReservations: 0,
   hasMACC: false,
   maccBurnPct: 100,
-  fabricCapacityUnits: 0,
-  githubCopilotLicenses: 0,
+  fabricMonthlySpend: 0,
+  githubCopilotSeats: 0,
+  githubCopilotPricePerSeat: 30,
 };
 
 // Pre-set industry scenarios
@@ -256,29 +260,30 @@ export interface PresetScenario {
 export const PRESET_SCENARIOS: PresetScenario[] = [
   {
     id: 'healthcare',
-    name: 'AI-Powered Patient Engagement',
+    name: 'Healthcare AI Transformation',
     industry: 'Healthcare',
     icon: '🏥',
-    description: 'A healthcare provider using Copilot Studio for patient chatbots and Azure AI Foundry for custom care recommendation models, with Fabric for data integration.',
+    description: 'Patient Engagement Bot (Copilot) + Clinical Data Analysis (Foundry) + Research Repo (GitHub) + Data Lake (Fabric).',
     inputs: {
-      activeUsers: 5000,
+      activeUsers: 2000,
       queriesPerUserPerMonth: 10,
-      ptuHoursPerMonth: 20,
+      ptuHoursPerMonth: 10,
       existingCopilotCredits: 0,
       existingPtuReservations: 0,
       hasMACC: true,
       maccBurnPct: 100,
-      fabricCapacityUnits: 100,
-      githubCopilotLicenses: 50,
+      fabricMonthlySpend: 2000,
+      githubCopilotSeats: 50,
+      githubCopilotPricePerSeat: 30,
     },
-    guidance: 'Strategic Insight for Healthcare: P3 is an excellent fit. It provides a unified budget for patient-facing Copilot agents and backend Foundry models, simplifying cost management and contributing to MACC. The flexibility of ACUs ensures AI initiatives can evolve without separate procurements for each core AI service.',
+    guidance: 'Strategic Insight for Healthcare: In Healthcare, P3 is the "Unified AI Budget." It allows the hospital to fund both patient-facing bots and backend research models from one pool of credits, simplifying HIPAA-compliant procurement. Fabric and GitHub costs are now included in the total footprint, maximizing P3 coverage and MACC drawdown.',
   },
   {
     id: 'financial',
     name: 'Intelligent Financial Advisory',
     industry: 'Financial Services',
     icon: '🏦',
-    description: 'A financial services firm deploying AI-powered advisory agents for wealth management clients, with Foundry-based risk analysis models.',
+    description: 'AI-powered advisory agents for wealth management clients, with Foundry-based risk analysis models and Fabric analytics.',
     inputs: {
       activeUsers: 2000,
       queriesPerUserPerMonth: 30,
@@ -287,8 +292,9 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       existingPtuReservations: 10,
       hasMACC: true,
       maccBurnPct: 80,
-      fabricCapacityUnits: 200,
-      githubCopilotLicenses: 100,
+      fabricMonthlySpend: 5000,
+      githubCopilotSeats: 100,
+      githubCopilotPricePerSeat: 30,
     },
     guidance: 'Strategic Insight for Financial Services: With existing copilot credits partially covering agent usage, P3 efficiently handles the residual Foundry workload. The MACC contribution provides predictable spend, which is critical for regulated industries requiring auditable cost management.',
   },
@@ -297,7 +303,7 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
     name: 'Omnichannel Customer Service',
     industry: 'Retail & E-Commerce',
     icon: '🛒',
-    description: 'A retailer deploying AI agents across web, mobile, and in-store kiosks for product recommendations, order tracking, and customer support.',
+    description: 'AI agents across web, mobile, and in-store kiosks for product recommendations, order tracking, and customer support.',
     inputs: {
       activeUsers: 10000,
       queriesPerUserPerMonth: 15,
@@ -306,8 +312,9 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       existingPtuReservations: 0,
       hasMACC: false,
       maccBurnPct: 100,
-      fabricCapacityUnits: 50,
-      githubCopilotLicenses: 25,
+      fabricMonthlySpend: 1500,
+      githubCopilotSeats: 25,
+      githubCopilotPricePerSeat: 30,
     },
     guidance: 'Strategic Insight for Retail: High user volume makes P3\'s volume discount highly attractive. The unified ACU pool flexes across seasonal demand spikes without over-provisioning. Even without a MACC, P3 delivers significant savings over PAYG at this scale.',
   },
@@ -316,7 +323,7 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
     name: 'Predictive Maintenance & Operations',
     industry: 'Manufacturing',
     icon: '🏭',
-    description: 'A manufacturer using Foundry for predictive maintenance models and Copilot agents for technician assistance and supply chain queries.',
+    description: 'Foundry for predictive maintenance models and Copilot agents for technician assistance and supply chain queries.',
     inputs: {
       activeUsers: 500,
       queriesPerUserPerMonth: 40,
@@ -325,8 +332,9 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       existingPtuReservations: 20,
       hasMACC: true,
       maccBurnPct: 100,
-      fabricCapacityUnits: 300,
-      githubCopilotLicenses: 30,
+      fabricMonthlySpend: 8000,
+      githubCopilotSeats: 30,
+      githubCopilotPricePerSeat: 30,
     },
     guidance: 'Strategic Insight for Manufacturing: Foundry-heavy workloads benefit greatly from P3\'s unified coverage. Existing PTU reservations are applied first, and P3 efficiently covers the remaining Copilot and Foundry residual. This optimizes total AI spend while drawing down the MACC commitment.',
   },

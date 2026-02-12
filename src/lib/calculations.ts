@@ -278,7 +278,9 @@ export function calculateResidualOutputs(inputs: ResidualInputs, assumptions: As
   const totalCopilotQueries = inputs.activeUsers * inputs.queriesPerUserPerMonth * 12;
   const estimatedCopilotRetailCost = totalCopilotQueries * assumptions.copilot_credit_usd;
   const estimatedFoundryRetailCost = inputs.ptuHoursPerMonth * 12 * assumptions.ptu_usd_per_hour;
-  const totalEstimatedRetailCost = estimatedCopilotRetailCost + estimatedFoundryRetailCost;
+  const estimatedFabricRetailCost = inputs.fabricMonthlySpend * 12;
+  const estimatedGithubRetailCost = inputs.githubCopilotSeats * inputs.githubCopilotPricePerSeat * 12;
+  const totalEstimatedRetailCost = estimatedCopilotRetailCost + estimatedFoundryRetailCost + estimatedFabricRetailCost + estimatedGithubRetailCost;
 
   // Step 2: Apply Foundry PTU Reservations (Precedence 1)
   const existingPtuCoverage = inputs.existingPtuReservations * 12 * assumptions.ptu_usd_per_hour;
@@ -291,8 +293,8 @@ export function calculateResidualOutputs(inputs: ResidualInputs, assumptions: As
 
   const totalCoveredByExisting = foundryCoveredByReservation + copilotCoveredByCredits;
 
-  // Step 4: Residual for P3
-  const totalResidualRetailCost = remainingFoundryRetailCost + remainingCopilotRetailCost;
+  // Step 4: Residual for P3 (includes Fabric + GitHub — no existing coverage for those)
+  const totalResidualRetailCost = remainingFoundryRetailCost + remainingCopilotRetailCost + estimatedFabricRetailCost + estimatedGithubRetailCost;
   const requiredP3ACUs = Math.ceil(totalResidualRetailCost);
 
   // Step 5: Find optimal P3 tier
@@ -328,6 +330,8 @@ export function calculateResidualOutputs(inputs: ResidualInputs, assumptions: As
     totalCopilotQueries,
     estimatedCopilotRetailCost,
     estimatedFoundryRetailCost,
+    estimatedFabricRetailCost,
+    estimatedGithubRetailCost,
     totalEstimatedRetailCost,
     foundryCoveredByReservation,
     remainingFoundryRetailCost,
