@@ -18,7 +18,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Estimator />} />
           <Route path="/estimator" element={<Estimator />} />
           <Route path="/results" element={<Results />} />
           <Route path="/assumptions" element={<Assumptions />} />
