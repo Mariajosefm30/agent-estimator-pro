@@ -1,6 +1,14 @@
 // View Mode (seller only for now)
 export type ViewMode = 'seller';
 
+// Strategic Scenario (Phase 1)
+export type StrategicScenario = 'hybrid_builder' | 'macc_optimizer' | 'scaler';
+
+// Simplified Selectors (Phase 2)
+export type UserScale = 'small' | 'medium' | 'enterprise';
+export type AgentComplexity = 'basic_qa' | 'knowledge_rag' | 'advanced_tooling';
+export type FoundryUsage = 'none' | 'experimental' | 'production';
+
 // Customer Starting Point
 export type CustomerStartingPoint = 'greenfield' | 'macc_only' | 'copilot_only' | 'copilot_macc';
 
@@ -45,6 +53,15 @@ export interface Guardrails {
 export interface EstimatorInputs {
   // View Mode
   viewMode: ViewMode;
+  
+  // Phase 1 - Strategic Intent
+  strategicScenario?: StrategicScenario;
+  
+  // Phase 2 - Simplified Selectors
+  userScale: UserScale;
+  agentComplexity: AgentComplexity;
+  foundryUsage: FoundryUsage;
+  showAdvanced: boolean;
   
   // Customer Context
   customerContext: CustomerContext;
@@ -202,6 +219,11 @@ export const DEFAULT_GUARDRAILS: Guardrails = {
 
 export const DEFAULT_INPUTS: EstimatorInputs = {
   viewMode: 'seller',
+  strategicScenario: undefined,
+  userScale: 'medium',
+  agentComplexity: 'knowledge_rag',
+  foundryUsage: 'none',
+  showAdvanced: false,
   customerContext: DEFAULT_CUSTOMER_CONTEXT,
   usageVariability: DEFAULT_USAGE_VARIABILITY,
   guardrails: DEFAULT_GUARDRAILS,
