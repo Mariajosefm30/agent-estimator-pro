@@ -6,6 +6,8 @@ import {
   VolatilityScore,
   ResidualInputs,
   ResidualOutputs,
+  FourWayComparison,
+  ComparisonOption,
 } from '@/types/estimator';
 
 // Multipliers for P50/P90 based on workload intensity and type
@@ -345,6 +347,89 @@ export function calculateResidualOutputs(inputs: ResidualInputs, assumptions: As
     p3Savings,
     p3DiscountPct,
     maccBurnAmount,
+  };
+}
+
+// Four-Way Comparison Engine
+export function calculateFourWayComparison(
+  inputs: ResidualInputs,
+  outputs: ResidualOutputs,
+  assumptions: Assumptions
+): FourWayComparison {
+  const totalRetail = outputs.totalEstimatedRetailCost;
+  const acoRate = 1 - inputs.acoDiscountPct / 100;
+  const p3DiscountRate = outputs.p3DiscountPct / 100;
+
+  // Option 1: Pure PAYG with ACO discount
+  const purePAYGCost = totalRetail * acoRate;
+  const purePAYG: ComparisonOption = {
+    label: 'Pure PAYG + ACO',
+    annualCost: purePAYGCost,
+    description: `All usage at ${inputs.acoDiscountPct}% ACO discount`,
+  };
+
+  // Option 2: Specialized Silos — PTU Reservation + Copilot Credits + ACO overflow
+  const ptuReservationAnnual = inputs.ptuReservationQuote * 12;
+  const copilotCreditPlanAnnual = inputs.copilotCreditPlanQuote * 12;
+  // Overflow = total retail minus what silos cover, at ACO rate
+  const siloCoverage = outputs.foundryCoveredByReservation + outputs.copilotCoveredByCredits;
+  const overflowRetail = Math.max(0, totalRetail - siloCoverage);
+  const siloCost = ptuReservationAnnual + copilotCreditPlanAnnual + overflowRetail * acoRate;
+  const specializedSilos: ComparisonOption = {
+    label: 'Specialized Silos',
+    annualCost: siloCost,
+    description: 'PTU Reservations + Copilot Credits + ACO overflow',
+  };
+
+  // Option 3: Unified P3
+  const unifiedP3: ComparisonOption = {
+    label: 'Unified P3',
+    annualCost: outputs.p3Cost,
+    description: `P3 Tier ${outputs.recommendedTier?.tier ?? '—'} unified pool`,
+  };
+
+  // Find winner
+  const options = [
+    { key: 'purePAYG' as const, cost: purePAYGCost },
+    { key: 'specializedSilos' as const, cost: siloCost },
+    { key: 'unifiedP3' as const, cost: outputs.p3Cost },
+  ];
+  options.sort((a, b) => a.cost - b.cost);
+  const winnerKey = options[0].key;
+  const cheapest = options[0].cost;
+  const secondCheapest = options[1].cost;
+
+  // ACO vs P3 discount comparison
+  const acoHigherThanP3 = inputs.acoDiscountPct > (outputs.p3DiscountPct || 0);
+
+  // Dynamic win guidance
+  let winGuidance: string;
+  if (winnerKey === 'unifiedP3') {
+    winGuidance = 'WIN: P3 provides the best financial value AND unified flexibility. ACUs flex across Copilot, Foundry, Fabric, and GitHub — no stranded credits.';
+  } else if (winnerKey === 'specializedSilos' && secondCheapest > 0) {
+    const diff = ((outputs.p3Cost - cheapest) / cheapest) * 100;
+    if (diff < 5) {
+      winGuidance = `STRATEGIC WIN: While Silos are slightly cheaper (${diff.toFixed(1)}% difference), P3 is recommended for Flexibility. If the customer shifts from Copilot to Foundry, P3 ACUs move with them; Silo credits would be wasted.`;
+    } else {
+      winGuidance = 'Silos are the cheapest option here. However, consider P3 if the customer values flexibility, MACC burn, or expects workload mix to change.';
+    }
+  } else if (winnerKey === 'purePAYG') {
+    if (acoHigherThanP3) {
+      winGuidance = `GUIDANCE: The customer's ACO discount (${inputs.acoDiscountPct}%) exceeds the P3 tier discount. Focus on MACC Burn — P3 allows the customer to draw down their MACC commitment upfront, which PAYG/ACO cannot do.`;
+    } else {
+      winGuidance = 'PAYG with ACO is currently the cheapest. P3 becomes more attractive as usage scales or if MACC drawdown is a priority.';
+    }
+  } else {
+    winGuidance = 'Compare options carefully based on the customer\'s priorities: cost, flexibility, or MACC strategy.';
+  }
+
+  return {
+    purePAYG,
+    specializedSilos,
+    unifiedP3,
+    winnerKey,
+    winGuidance,
+    acoHigherThanP3,
   };
 }
 
