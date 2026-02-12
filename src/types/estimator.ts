@@ -192,6 +192,49 @@ export interface Scenario {
   updated_at: string;
 }
 
+// Residual Workload Inputs (new simplified flow)
+export interface ResidualInputs {
+  activeUsers: number;
+  queriesPerUserPerMonth: number;
+  ptuHoursPerMonth: number;
+  existingCopilotCredits: number;
+  existingPtuReservations: number;
+  hasMACC: boolean;
+  maccBurnTarget: number;
+}
+
+export interface ResidualOutputs {
+  // Consumption
+  totalCopilotQueries: number;
+  estimatedCopilotRetailCost: number;
+  estimatedFoundryRetailCost: number;
+  totalEstimatedRetailCost: number;
+  // Existing coverage
+  foundryCoveredByReservation: number;
+  remainingFoundryRetailCost: number;
+  copilotCoveredByCredits: number;
+  remainingCopilotRetailCost: number;
+  totalCoveredByExisting: number;
+  // Residual
+  totalResidualRetailCost: number;
+  requiredP3ACUs: number;
+  // P3 recommendation
+  recommendedTier: AgentP3Tier | null;
+  p3Cost: number;
+  p3Savings: number;
+  p3DiscountPct: number;
+}
+
+export const DEFAULT_RESIDUAL_INPUTS: ResidualInputs = {
+  activeUsers: 1000,
+  queriesPerUserPerMonth: 20,
+  ptuHoursPerMonth: 100,
+  existingCopilotCredits: 0,
+  existingPtuReservations: 0,
+  hasMACC: false,
+  maccBurnTarget: 0,
+};
+
 // Default values
 export const DEFAULT_CUSTOMER_CONTEXT: CustomerContext = {
   startingPoint: 'greenfield',
