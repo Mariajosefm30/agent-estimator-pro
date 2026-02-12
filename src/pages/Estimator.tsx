@@ -2,11 +2,12 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ResidualOutputPanel } from '@/components/estimator/ResidualOutputPanel';
+import { OptimizationMatrix } from '@/components/estimator/OptimizationMatrix';
 import { P3CoverageExplorer } from '@/components/estimator/P3CoverageExplorer';
 import { SellerTip } from '@/components/estimator/SellerTip';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useSaveScenario } from '@/hooks/useScenarios';
-import { calculateResidualOutputs } from '@/lib/calculations';
+import { calculateResidualOutputs, calculateFourWayComparison } from '@/lib/calculations';
 import { ResidualInputs, DEFAULT_RESIDUAL_INPUTS, PRESET_SCENARIOS } from '@/types/estimator';
 import { EstimatorSection } from '@/components/estimator/EstimatorSection';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Save, RotateCcw, Users, Server, FileCheck, Coins, Info, Layers, Sparkles, ArrowRight, Database, Code } from 'lucide-react';
+import { Save, RotateCcw, Users, Server, FileCheck, Coins, Info, Layers, Sparkles, ArrowRight, Database, Code, Percent, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
@@ -74,6 +75,11 @@ export default function Estimator() {
     if (!assumptions) return null;
     return calculateResidualOutputs(inputs, assumptions);
   }, [inputs, assumptions]);
+
+  const comparison = useMemo(() => {
+    if (!assumptions || !outputs) return null;
+    return calculateFourWayComparison(inputs, outputs, assumptions);
+  }, [inputs, outputs, assumptions]);
 
   const handleSave = async () => {
     if (!outputs || !scenarioName.trim()) return;
@@ -227,6 +233,53 @@ export default function Estimator() {
                 </div>
               </EstimatorSection>
 
+              {/* ACO & Comparison Quotes */}
+              <EstimatorSection
+                title="Azure Credit Offer & Quotes"
+                description="Compare P3 against the customer's existing Azure discounts and alternative quotes"
+                icon={<Percent className="h-4 w-4" />}
+                infoText="Enter the customer's ACO discount and any standalone quotes for PTU Reservations or Copilot Credits to power the four-way comparison."
+              >
+                <div className="flex items-center gap-1.5 mb-3">
+                  <SellerTip tip="Seller Tip: Enter the customer's specific ACO discount percentage from their Enterprise Agreement or contract. This allows the tool to compare P3's value against their existing Azure discounts." />
+                  <span className="text-xs text-primary font-medium">Seller Tip</span>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <FieldWithTooltip label="ACO Discount %" tooltip="The customer's Azure Credit Offer discount percentage (e.g., 12%, 15%). Applied to retail prices for the PAYG baseline comparison.">
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        value={inputs.acoDiscountPct}
+                        onChange={e => update('acoDiscountPct', Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
+                        min={0}
+                        max={100}
+                        placeholder="e.g. 12"
+                        className="pr-8"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
+                    </div>
+                  </FieldWithTooltip>
+                  <FieldWithTooltip label="PTU Reservation Quote ($/mo)" tooltip="Monthly cost for dedicated Foundry PTU reservations. Used in the 'Specialized Silos' comparison path.">
+                    <Input
+                      type="number"
+                      value={inputs.ptuReservationQuote}
+                      onChange={e => update('ptuReservationQuote', Math.max(0, Number(e.target.value) || 0))}
+                      min={0}
+                      placeholder="e.g. 5000"
+                    />
+                  </FieldWithTooltip>
+                  <FieldWithTooltip label="Copilot Credit Plan Quote ($/mo)" tooltip="Monthly cost for a standalone Copilot Credit plan. Used in the 'Specialized Silos' comparison path.">
+                    <Input
+                      type="number"
+                      value={inputs.copilotCreditPlanQuote}
+                      onChange={e => update('copilotCreditPlanQuote', Math.max(0, Number(e.target.value) || 0))}
+                      min={0}
+                      placeholder="e.g. 3000"
+                    />
+                  </FieldWithTooltip>
+                </div>
+              </EstimatorSection>
+
               {/* Existing Commitments */}
               <EstimatorSection
                 title="Existing Commitments"
@@ -349,8 +402,9 @@ export default function Estimator() {
             </div>
 
             {/* Right: Output Panel */}
-            <div className="lg:sticky lg:top-20 lg:self-start">
+            <div className="lg:sticky lg:top-20 lg:self-start space-y-4">
               <ResidualOutputPanel outputs={outputs} hasMACC={inputs.hasMACC} maccBurnPct={inputs.maccBurnPct} />
+              {comparison && <OptimizationMatrix comparison={comparison} />}
             </div>
           </div>
         </TabsContent>
