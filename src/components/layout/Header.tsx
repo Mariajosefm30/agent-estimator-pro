@@ -1,10 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Calculator, FileText, Settings } from 'lucide-react';
+import { Calculator, Settings } from 'lucide-react';
 
 const navItems = [
   { path: '/estimator', label: 'Estimator', icon: Calculator },
-  { path: '/results', label: 'Results', icon: FileText },
   { path: '/assumptions', label: 'Assumptions', icon: Settings },
 ];
 
