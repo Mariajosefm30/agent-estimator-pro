@@ -17,16 +17,17 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Save, RotateCcw, Users, Server, FileCheck, Coins, Info, Layers, Sparkles, ArrowRight, Database, Code, Percent, Receipt } from 'lucide-react';
+import { Download, RotateCcw, Users, Server, FileCheck, Coins, Info, Layers, Sparkles, ArrowRight, Database, Code, Percent, Receipt, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter,
-  DialogHeader, DialogTitle, DialogTrigger,
-} from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 function FieldWithTooltip({ label, tooltip, children }: { label: string; tooltip: string; children: React.ReactNode }) {
   return (
@@ -49,11 +50,9 @@ function FieldWithTooltip({ label, tooltip, children }: { label: string; tooltip
 
 export default function Estimator() {
   const [inputs, setInputs] = useState<ResidualInputs>(DEFAULT_RESIDUAL_INPUTS);
-  const [scenarioName, setScenarioName] = useState('');
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [coverageOpen, setCoverageOpen] = useState(false);
 
   const { data: assumptions, isLoading: assumptionsLoading } = useAssumptions();
-  const saveScenario = useSaveScenario();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -68,7 +67,7 @@ export default function Estimator() {
 
   const loadPreset = useCallback((presetInputs: ResidualInputs) => {
     setInputs(presetInputs);
-    toast({ title: 'Scenario loaded', description: 'Inputs have been pre-populated. Switch to the Estimator tab to view results.' });
+    toast({ title: 'Scenario loaded', description: 'Inputs have been pre-populated. Switch to "Create Your Own Scenario" to view results.' });
   }, [toast]);
 
   const outputs = useMemo(() => {
@@ -81,22 +80,51 @@ export default function Estimator() {
     return calculateFourWayComparison(inputs, outputs, assumptions);
   }, [inputs, outputs, assumptions]);
 
-  const handleSave = async () => {
-    if (!outputs || !scenarioName.trim()) return;
-    try {
-      const saved = await saveScenario.mutateAsync({
-        name: scenarioName.trim(),
-        inputs: inputs as any,
-        outputs: outputs as any,
-      });
-      setSaveDialogOpen(false);
-      setScenarioName('');
-      toast({ title: 'Scenario saved', description: `"${saved.name}" saved successfully.` });
-      navigate(`/results?id=${saved.id}`);
-    } catch {
-      toast({ title: 'Error saving', description: 'Please try again.', variant: 'destructive' });
-    }
-  };
+  const handleExport = useCallback(() => {
+    if (!outputs || !comparison) return;
+    const rows = [
+      ['Microsoft Agent P3 Estimator — Export'],
+      [],
+      ['Inputs'],
+      ['Active Users', inputs.activeUsers],
+      ['Queries/User/Month', inputs.queriesPerUserPerMonth],
+      ['PTUs/Month', inputs.ptuHoursPerMonth],
+      ['Fabric Monthly Spend (USD)', inputs.fabricMonthlySpend],
+      ['GitHub Copilot Seats', inputs.githubCopilotSeats],
+      ['GitHub Price/Seat', inputs.githubCopilotPricePerSeat],
+      ['Existing Copilot Credits', inputs.existingCopilotCredits],
+      ['Existing PTU Reservations', inputs.existingPtuReservations],
+      ['ACO Discount %', inputs.acoDiscountPct],
+      ['PTU Reservation Quote ($/mo)', inputs.ptuReservationQuote],
+      ['Copilot Credit Plan Quote ($/mo)', inputs.copilotCreditPlanQuote],
+      ['Has MACC', inputs.hasMACC ? 'Yes' : 'No'],
+      ['MACC Burn %', inputs.maccBurnPct],
+      [],
+      ['Outputs'],
+      ['Total Estimated Retail Cost (Annual)', outputs.totalEstimatedRetailCost],
+      ['Residual After Commitments (Annual)', outputs.totalResidualRetailCost],
+      ['Recommended P3 Tier', outputs.recommendedTier ? `Tier ${outputs.recommendedTier.tier}` : 'None'],
+      ['P3 Tier Price (Annual)', outputs.p3Cost],
+      ['Estimated Savings (Annual)', outputs.p3Savings],
+      [],
+      ['Four-Way Comparison'],
+      ['Pure PAYG + ACO', comparison.purePAYG.annualCost],
+      ['Specialized Silos', comparison.specializedSilos.annualCost],
+      ['Unified P3', comparison.unifiedP3.annualCost],
+      [],
+      ['Winner', comparison.winnerKey],
+      ['Guidance', comparison.winGuidance],
+    ];
+    const csv = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'p3-estimator-export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Exported', description: 'CSV file downloaded.' });
+  }, [inputs, outputs, comparison, toast]);
 
   if (assumptionsLoading || !outputs) {
     return (
@@ -117,21 +145,29 @@ export default function Estimator() {
         <p className="text-muted-foreground mt-1 max-w-2xl mx-auto">
           Enter your customer's AI usage and existing commitments to see how P3 covers the residual workload
         </p>
+        <div className="mt-3 max-w-2xl mx-auto">
+          <Collapsible open={coverageOpen} onOpenChange={setCoverageOpen}>
+            <CollapsibleTrigger className="flex items-center gap-2 mx-auto text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+              <Layers className="h-4 w-4" />
+              What's Included in P3?
+              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${coverageOpen ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
+              <P3CoverageExplorer />
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
       </div>
 
-      <Tabs defaultValue="estimator" className="w-full">
-        <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-6">
-          <TabsTrigger value="estimator" className="gap-2">
-            <Sparkles className="h-4 w-4" />
-            Estimator
-          </TabsTrigger>
-          <TabsTrigger value="coverage" className="gap-2">
-            <Layers className="h-4 w-4" />
-            P3 Coverage
-          </TabsTrigger>
+      <Tabs defaultValue="scenarios" className="w-full">
+        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
           <TabsTrigger value="scenarios" className="gap-2">
             <ArrowRight className="h-4 w-4" />
             Quick Scenarios
+          </TabsTrigger>
+          <TabsTrigger value="estimator" className="gap-2">
+            <Sparkles className="h-4 w-4" />
+            Create Your Own Scenario
           </TabsTrigger>
         </TabsList>
 
@@ -364,36 +400,10 @@ export default function Estimator() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 pt-2">
-                <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="gap-2">
-                      <Save className="h-4 w-4" />
-                      Save Scenario
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Save Scenario</DialogTitle>
-                      <DialogDescription>Name your scenario to save it for later comparison.</DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4">
-                      <Label htmlFor="scenario-name">Scenario name</Label>
-                      <Input
-                        id="scenario-name"
-                        value={scenarioName}
-                        onChange={e => setScenarioName(e.target.value)}
-                        placeholder="e.g., Enterprise Deployment Q1"
-                        className="mt-2"
-                      />
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>Cancel</Button>
-                      <Button onClick={handleSave} disabled={!scenarioName.trim() || saveScenario.isPending}>
-                        {saveScenario.isPending ? 'Saving...' : 'Save'}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <Button className="gap-2" onClick={handleExport}>
+                  <Download className="h-4 w-4" />
+                  Export to CSV
+                </Button>
                 <Button variant="outline" onClick={handleReset} className="gap-2">
                   <RotateCcw className="h-4 w-4" />
                   Reset
@@ -406,12 +416,6 @@ export default function Estimator() {
               <ResidualOutputPanel outputs={outputs} hasMACC={inputs.hasMACC} maccBurnPct={inputs.maccBurnPct} />
               {comparison && <OptimizationMatrix comparison={comparison} />}
             </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="coverage">
-          <div className="max-w-2xl mx-auto">
-            <P3CoverageExplorer />
           </div>
         </TabsContent>
 
