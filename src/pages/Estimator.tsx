@@ -2,6 +2,8 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ResidualOutputPanel } from '@/components/estimator/ResidualOutputPanel';
+import { P3CoverageExplorer } from '@/components/estimator/P3CoverageExplorer';
+import { SellerTip } from '@/components/estimator/SellerTip';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useSaveScenario } from '@/hooks/useScenarios';
 import { calculateResidualOutputs } from '@/lib/calculations';
@@ -14,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Save, RotateCcw, Users, Server, FileCheck, Coins, Info, Layers, Sparkles, ArrowRight } from 'lucide-react';
+import { Save, RotateCcw, Users, Server, FileCheck, Coins, Info, Layers, Sparkles, ArrowRight, Database, Code } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
@@ -112,14 +114,18 @@ export default function Estimator() {
       </div>
 
       <Tabs defaultValue="estimator" className="w-full">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
+        <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-6">
           <TabsTrigger value="estimator" className="gap-2">
             <Sparkles className="h-4 w-4" />
             Estimator
           </TabsTrigger>
-          <TabsTrigger value="scenarios" className="gap-2">
+          <TabsTrigger value="coverage" className="gap-2">
             <Layers className="h-4 w-4" />
-            Pre-set Scenarios
+            P3 Coverage
+          </TabsTrigger>
+          <TabsTrigger value="scenarios" className="gap-2">
+            <ArrowRight className="h-4 w-4" />
+            Quick Scenarios
           </TabsTrigger>
         </TabsList>
 
@@ -174,40 +180,51 @@ export default function Estimator() {
                 </FieldWithTooltip>
               </EstimatorSection>
 
-              {/* Other AI Services */}
+              {/* Fabric — now active P3 input */}
               <EstimatorSection
-                title="Other AI Services (Context Only)"
-                description="Part of the holistic AI solution — not directly covered by P3 ACUs"
-                icon={<Layers className="h-4 w-4" />}
-                defaultOpen={false}
-                infoText="These services are often part of a comprehensive AI deployment. While they do not directly decrement P3 ACUs, tracking them provides a complete picture of the customer's AI investment."
+                title="Microsoft Fabric"
+                description="Fabric Capacity (F-SKUs) and OneLake — contributes to P3 ACU pool"
+                icon={<Database className="h-4 w-4" />}
+                infoText="As of Feb 2026, Fabric capacity is covered by P3 ACUs. Enter the customer's estimated monthly Fabric spend in USD."
+              >
+                <FieldWithTooltip label="Monthly Fabric Spend (USD)" tooltip="Estimated monthly Microsoft Fabric spend. This amount is included in the total AI footprint and decrements P3 ACUs at a 1:1 USD retail ratio.">
+                  <Input
+                    type="number"
+                    value={inputs.fabricMonthlySpend}
+                    onChange={e => update('fabricMonthlySpend', Math.max(0, Number(e.target.value) || 0))}
+                    min={0}
+                    placeholder="e.g. 2000"
+                  />
+                </FieldWithTooltip>
+              </EstimatorSection>
+
+              {/* GitHub — now active P3 input */}
+              <EstimatorSection
+                title="GitHub Copilot"
+                description="GitHub Copilot seats — contributes to P3 ACU pool"
+                icon={<Code className="h-4 w-4" />}
+                infoText="As of Feb 2026, GitHub Copilot is covered by P3 ACUs. Enter the seat count and per-seat price."
               >
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <FieldWithTooltip label="Microsoft Fabric Capacity Units (CUs)" tooltip="Input estimated monthly Microsoft Fabric Capacity Units. Note: Fabric CUs do not directly decrement P3 ACUs but are part of a holistic AI solution.">
+                  <FieldWithTooltip label="GitHub Copilot Seats" tooltip="Number of GitHub Copilot licenses. Each seat's cost decrements the P3 ACU pool.">
                     <Input
                       type="number"
-                      value={inputs.fabricCapacityUnits}
-                      onChange={e => update('fabricCapacityUnits', Math.max(0, Number(e.target.value) || 0))}
+                      value={inputs.githubCopilotSeats}
+                      onChange={e => update('githubCopilotSeats', Math.max(0, Number(e.target.value) || 0))}
                       min={0}
-                      placeholder="0"
+                      placeholder="e.g. 50"
                     />
                   </FieldWithTooltip>
-                  <FieldWithTooltip label="GitHub Copilot Licenses" tooltip="Input estimated monthly GitHub Copilot licenses. Note: GitHub Copilot licenses do not directly decrement P3 ACUs but are part of a holistic AI solution.">
+                  <FieldWithTooltip label="Price per Seat / Month (USD)" tooltip="Monthly price per GitHub Copilot seat.">
                     <Input
                       type="number"
-                      value={inputs.githubCopilotLicenses}
-                      onChange={e => update('githubCopilotLicenses', Math.max(0, Number(e.target.value) || 0))}
+                      value={inputs.githubCopilotPricePerSeat}
+                      onChange={e => update('githubCopilotPricePerSeat', Math.max(0, Number(e.target.value) || 0))}
                       min={0}
-                      placeholder="0"
+                      placeholder="e.g. 30"
                     />
                   </FieldWithTooltip>
                 </div>
-                <Alert className="border-muted bg-muted/30">
-                  <Info className="h-4 w-4" />
-                  <AlertDescription className="text-xs">
-                    These services are tracked for context. They do <strong>not</strong> decrement P3 ACUs directly.
-                  </AlertDescription>
-                </Alert>
               </EstimatorSection>
 
               {/* Existing Commitments */}
@@ -217,6 +234,10 @@ export default function Estimator() {
                 icon={<FileCheck className="h-4 w-4" />}
                 infoText="If the customer already has Copilot credits or Foundry PTU reservations, enter them here. These are applied before P3 in Microsoft's benefit hierarchy."
               >
+                <div className="flex items-center gap-1.5 mb-3">
+                  <SellerTip tip="Guidance: If a customer already has PTUs or Copilot Credits, P3 only kicks in AFTER those are exhausted. Use this to show how P3 acts as the 'Safety Net' for overflow usage." />
+                  <span className="text-xs text-primary font-medium">Seller Tip</span>
+                </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <FieldWithTooltip label="Existing Copilot Credit Plan (CCCUs)" tooltip="Enter any existing Copilot Credit Pre-Purchase Plan units. These will be consumed before P3 ACUs for Copilot usage.">
                     <Input
@@ -246,6 +267,10 @@ export default function Estimator() {
                 icon={<Coins className="h-4 w-4" />}
                 infoText="If the customer has an active MACC, P3 purchases can count toward burning it down. Specify what percentage of the P3 cost contributes to the MACC."
               >
+                <div className="flex items-center gap-1.5 mb-3">
+                  <SellerTip tip="Tip for Sellers: P3 is a 'MACC Accelerator.' Unlike PAYG, which burns MACC as usage happens, P3 burns the full commitment amount upfront, helping customers meet their annual MACC targets instantly while securing a discount." />
+                  <span className="text-xs text-primary font-medium">Seller Tip</span>
+                </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <FieldWithTooltip label="Does the customer have an active MACC?" tooltip="Indicate if the customer has a Microsoft Azure Consumption Commitment (MACC) they wish to utilize.">
@@ -330,10 +355,16 @@ export default function Estimator() {
           </div>
         </TabsContent>
 
+        <TabsContent value="coverage">
+          <div className="max-w-2xl mx-auto">
+            <P3CoverageExplorer />
+          </div>
+        </TabsContent>
+
         <TabsContent value="scenarios">
           <div className="space-y-6">
             <div className="text-center max-w-2xl mx-auto">
-              <h2 className="text-xl font-semibold text-foreground mb-2">Pre-set Industry Scenarios</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-2">Quick Scenarios</h2>
               <p className="text-sm text-muted-foreground">
                 Select an industry scenario to pre-populate the estimator with typical values. Use these as starting points, then customize for your specific customer.
               </p>
@@ -354,7 +385,7 @@ export default function Estimator() {
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {scenario.description}
                     </p>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="grid grid-cols-4 gap-2 text-xs">
                       <div className="p-2 rounded bg-muted/50 text-center">
                         <div className="font-semibold text-foreground">{scenario.inputs.activeUsers.toLocaleString()}</div>
                         <div className="text-muted-foreground">Users</div>
@@ -362,6 +393,10 @@ export default function Estimator() {
                       <div className="p-2 rounded bg-muted/50 text-center">
                         <div className="font-semibold text-foreground">{scenario.inputs.ptuHoursPerMonth}</div>
                         <div className="text-muted-foreground">PTUs</div>
+                      </div>
+                      <div className="p-2 rounded bg-muted/50 text-center">
+                        <div className="font-semibold text-foreground">{scenario.inputs.githubCopilotSeats}</div>
+                        <div className="text-muted-foreground">GH Seats</div>
                       </div>
                       <div className="p-2 rounded bg-muted/50 text-center">
                         <div className="font-semibold text-foreground">{scenario.inputs.hasMACC ? 'Yes' : 'No'}</div>

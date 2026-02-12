@@ -6,6 +6,7 @@ import {
   TrendingDown, Coins, Sparkles, Lightbulb, ShieldCheck, AlertTriangle, CheckCircle2, Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SellerTip } from './SellerTip';
 
 interface ResidualOutputPanelProps {
   outputs: ResidualOutputs;
@@ -30,15 +31,16 @@ export function ResidualOutputPanel({ outputs, hasMACC, maccBurnPct }: ResidualO
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
 
-        {/* P3 Coverage Explanation */}
+        {/* P3 Coverage Summary */}
         <div className="p-3 rounded-lg bg-muted/30 border border-border">
           <div className="flex items-start gap-2">
             <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              <span className="font-medium text-foreground">Understanding P3 Coverage:</span>{' '}
-              P3 provides a unified pool of Agent Commit Units (ACUs) for{' '}
-              <strong>Microsoft Copilot Studio</strong> and <strong>Azure AI Foundry</strong>.
-              Other services like Fabric and GitHub are managed separately and do not decrement P3 ACUs.
+              <span className="font-medium text-foreground">P3 Coverage Summary:</span>{' '}
+              This estimator calculates your total AI footprint across <strong>Foundry</strong>,{' '}
+              <strong>Copilot</strong>, <strong>Fabric</strong>, and <strong>GitHub</strong>.
+              P3 provides a single pool of Agent Commit Units (ACUs) that covers all these services,
+              ensuring you never over-pay for individual service silos.
             </p>
           </div>
         </div>
@@ -49,10 +51,22 @@ export function ResidualOutputPanel({ outputs, hasMACC, maccBurnPct }: ResidualO
             Cost Breakdown
           </div>
           <div className="space-y-1.5">
-            <SummaryRow label="Total Estimated AI Consumption (PAYG)" value={formatCurrency(outputs.totalEstimatedRetailCost)} />
+            <SummaryRow label="Total AI Consumption (PAYG)" value={formatCurrency(outputs.totalEstimatedRetailCost)} />
+            {outputs.estimatedFabricRetailCost > 0 && (
+              <SummaryRow label="  └ Fabric (annual)" value={formatCurrency(outputs.estimatedFabricRetailCost)} muted />
+            )}
+            {outputs.estimatedGithubRetailCost > 0 && (
+              <SummaryRow label="  └ GitHub (annual)" value={formatCurrency(outputs.estimatedGithubRetailCost)} muted />
+            )}
             <SummaryRow label="Covered by Existing Commitments" value={`−${formatCurrency(outputs.totalCoveredByExisting)}`} muted />
             <div className="h-px bg-border my-2" />
-            <SummaryRow label="Residual Workload for P3" value={formatCurrency(outputs.totalResidualRetailCost)} bold />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm text-foreground font-medium">Residual Workload for P3</span>
+                <SellerTip tip="Strategic Insight: If the residual workload is higher than $19k/year, the customer is losing money by staying on PAYG. Tier 1 P3 is the immediate 'Next Step' recommendation." />
+              </div>
+              <span className="text-base tabular-nums font-medium text-foreground">{formatCurrency(outputs.totalResidualRetailCost)}</span>
+            </div>
           </div>
         </div>
 
@@ -132,7 +146,7 @@ export function ResidualOutputPanel({ outputs, hasMACC, maccBurnPct }: ResidualO
             <p className="text-xs text-muted-foreground leading-relaxed">
               <span className="font-medium text-foreground">Flexibility tip:</span>{' '}
               P3's unified ACU pool means the customer doesn't over-buy for one service.
-              ACUs flex across Copilot Studio messages <em>and</em> Azure AI Foundry tokens.
+              ACUs flex across Copilot Studio, Azure AI Foundry, Fabric, <em>and</em> GitHub Copilot.
             </p>
           </div>
         </div>
@@ -194,9 +208,9 @@ function DynamicRecommendation({ outputs }: { outputs: ResidualOutputs }) {
       <ShieldCheck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
       <p className="text-xs text-foreground leading-relaxed">
         <span className="font-medium">Guidance:</span> P3 is highly recommended here. It efficiently covers your
-        remaining AI workload, maximizes savings by consolidating Copilot and Foundry usage, and provides a
+        remaining AI workload, maximizes savings by consolidating Copilot, Foundry, Fabric, and GitHub usage, and provides a
         predictable way to draw down your MACC commitment. This is ideal for customers scaling their AI initiatives
-        across both platforms, offering both cost efficiency and operational simplicity.
+        across all platforms, offering both cost efficiency and operational simplicity.
       </p>
     </div>
   );
