@@ -3,7 +3,9 @@ import {
   EstimatorOutputs, 
   Assumptions, 
   AgentP3Tier,
-  VolatilityScore 
+  VolatilityScore,
+  ResidualInputs,
+  ResidualOutputs,
 } from '@/types/estimator';
 
 // Multipliers for P50/P90 based on workload intensity and type
@@ -268,6 +270,71 @@ export function calculateOutputs(inputs: EstimatorInputs, assumptions: Assumptio
     estimatedPlanCost,
     estimatedSavings,
     estimatedDiscountPct,
+  };
+}
+
+export function calculateResidualOutputs(inputs: ResidualInputs, assumptions: Assumptions): ResidualOutputs {
+  // Step 1: Total estimated retail consumption (annual)
+  const totalCopilotQueries = inputs.activeUsers * inputs.queriesPerUserPerMonth * 12;
+  const estimatedCopilotRetailCost = totalCopilotQueries * assumptions.copilot_credit_usd;
+  const estimatedFoundryRetailCost = inputs.ptuHoursPerMonth * 12 * assumptions.ptu_usd_per_hour;
+  const totalEstimatedRetailCost = estimatedCopilotRetailCost + estimatedFoundryRetailCost;
+
+  // Step 2: Apply Foundry PTU Reservations (Precedence 1)
+  const existingPtuCoverage = inputs.existingPtuReservations * 12 * assumptions.ptu_usd_per_hour;
+  const foundryCoveredByReservation = Math.min(estimatedFoundryRetailCost, existingPtuCoverage);
+  const remainingFoundryRetailCost = estimatedFoundryRetailCost - foundryCoveredByReservation;
+
+  // Step 3: Apply Copilot Credit Pre-Purchase (Precedence 2) — 1 CCCU = $1 retail
+  const copilotCoveredByCredits = Math.min(estimatedCopilotRetailCost, inputs.existingCopilotCredits);
+  const remainingCopilotRetailCost = estimatedCopilotRetailCost - copilotCoveredByCredits;
+
+  const totalCoveredByExisting = foundryCoveredByReservation + copilotCoveredByCredits;
+
+  // Step 4: Residual for P3
+  const totalResidualRetailCost = remainingFoundryRetailCost + remainingCopilotRetailCost;
+  const requiredP3ACUs = Math.ceil(totalResidualRetailCost);
+
+  // Step 5: Find optimal P3 tier
+  const tiers = [...assumptions.agent_p3_tiers].sort((a, b) => a.acus - b.acus);
+  let recommendedTier: AgentP3Tier | null = null;
+
+  if (requiredP3ACUs > 0) {
+    for (const tier of tiers) {
+      if (tier.acus >= requiredP3ACUs) {
+        recommendedTier = tier;
+        break;
+      }
+    }
+    if (!recommendedTier && tiers.length > 0) {
+      recommendedTier = tiers[tiers.length - 1];
+    }
+  }
+
+  const p3Cost = recommendedTier
+    ? recommendedTier.estimated_cost
+    : totalResidualRetailCost;
+  const p3Savings = totalResidualRetailCost - p3Cost;
+  const p3DiscountPct = totalResidualRetailCost > 0
+    ? (p3Savings / totalResidualRetailCost) * 100
+    : 0;
+
+  return {
+    totalCopilotQueries,
+    estimatedCopilotRetailCost,
+    estimatedFoundryRetailCost,
+    totalEstimatedRetailCost,
+    foundryCoveredByReservation,
+    remainingFoundryRetailCost,
+    copilotCoveredByCredits,
+    remainingCopilotRetailCost,
+    totalCoveredByExisting,
+    totalResidualRetailCost,
+    requiredP3ACUs,
+    recommendedTier,
+    p3Cost,
+    p3Savings,
+    p3DiscountPct,
   };
 }
 
