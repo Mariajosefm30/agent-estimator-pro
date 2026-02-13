@@ -209,6 +209,13 @@ export interface ResidualInputs {
   acoDiscountPct: number;
   ptuReservationQuote: number;
   copilotCreditPlanQuote: number;
+  // Foundry token-based calculator
+  foundryInputRatio: number; // % of tokens that are input (remainder is output)
+  foundryUsageMode: 'tpm' | 'rpm' | 'monthly_tokens';
+  foundryTpm: number;
+  foundryRpm: number;
+  foundryMonthlyInputTokens: number;
+  foundryMonthlyOutputTokens: number;
 }
 
 // Four-Way Comparison output
@@ -267,6 +274,12 @@ export const DEFAULT_RESIDUAL_INPUTS: ResidualInputs = {
   acoDiscountPct: 0,
   ptuReservationQuote: 0,
   copilotCreditPlanQuote: 0,
+  foundryInputRatio: 80,
+  foundryUsageMode: 'monthly_tokens',
+  foundryTpm: 0,
+  foundryRpm: 0,
+  foundryMonthlyInputTokens: 0,
+  foundryMonthlyOutputTokens: 0,
 };
 
 // Pre-set industry scenarios
@@ -301,6 +314,12 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       acoDiscountPct: 12,
       ptuReservationQuote: 0,
       copilotCreditPlanQuote: 0,
+      foundryInputRatio: 80,
+      foundryUsageMode: 'monthly_tokens',
+      foundryTpm: 0,
+      foundryRpm: 0,
+      foundryMonthlyInputTokens: 0,
+      foundryMonthlyOutputTokens: 0,
     },
     guidance: 'Strategic Insight for Healthcare: In Healthcare, P3 is the "Unified AI Budget." It allows the hospital to fund both patient-facing bots and backend research models from one pool of credits, simplifying HIPAA-compliant procurement. Fabric and GitHub costs are now included in the total footprint, maximizing P3 coverage and MACC drawdown.',
   },
@@ -324,6 +343,12 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       acoDiscountPct: 15,
       ptuReservationQuote: 8000,
       copilotCreditPlanQuote: 4000,
+      foundryInputRatio: 75,
+      foundryUsageMode: 'monthly_tokens',
+      foundryTpm: 0,
+      foundryRpm: 0,
+      foundryMonthlyInputTokens: 200000000,
+      foundryMonthlyOutputTokens: 50000000,
     },
     guidance: 'Strategic Insight for Financial Services: With existing copilot credits partially covering agent usage, P3 efficiently handles the residual Foundry workload. The MACC contribution provides predictable spend, which is critical for regulated industries requiring auditable cost management.',
   },
@@ -347,6 +372,12 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       acoDiscountPct: 10,
       ptuReservationQuote: 0,
       copilotCreditPlanQuote: 0,
+      foundryInputRatio: 80,
+      foundryUsageMode: 'monthly_tokens',
+      foundryTpm: 0,
+      foundryRpm: 0,
+      foundryMonthlyInputTokens: 0,
+      foundryMonthlyOutputTokens: 0,
     },
     guidance: 'Strategic Insight for Retail: High user volume makes P3\'s volume discount highly attractive. The unified ACU pool flexes across seasonal demand spikes without over-provisioning. Even without a MACC, P3 delivers significant savings over PAYG at this scale.',
   },
@@ -370,6 +401,12 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       acoDiscountPct: 12,
       ptuReservationQuote: 15000,
       copilotCreditPlanQuote: 3000,
+      foundryInputRatio: 70,
+      foundryUsageMode: 'monthly_tokens',
+      foundryTpm: 0,
+      foundryRpm: 0,
+      foundryMonthlyInputTokens: 500000000,
+      foundryMonthlyOutputTokens: 150000000,
     },
     guidance: 'Strategic Insight for Manufacturing: Foundry-heavy workloads benefit greatly from P3\'s unified coverage. Existing PTU reservations are applied first, and P3 efficiently covers the remaining Copilot and Foundry residual. This optimizes total AI spend while drawing down the MACC commitment.',
   },
