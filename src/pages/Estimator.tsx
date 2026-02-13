@@ -4,6 +4,7 @@ import { Layout } from '@/components/layout/Layout';
 import { ResidualOutputPanel } from '@/components/estimator/ResidualOutputPanel';
 import { OptimizationMatrix } from '@/components/estimator/OptimizationMatrix';
 import { P3CoverageExplorer } from '@/components/estimator/P3CoverageExplorer';
+import { FoundryServicesSection } from '@/components/estimator/sections/FoundryServicesSection';
 import { SellerTip } from '@/components/estimator/SellerTip';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useSaveScenario } from '@/hooks/useScenarios';
@@ -204,23 +205,8 @@ export default function Estimator() {
                 </div>
               </EstimatorSection>
 
-              {/* Foundry Usage */}
-              <EstimatorSection
-                title="Estimated Monthly Foundry Usage"
-                description="Azure AI Foundry provisioned throughput"
-                icon={<Server className="h-4 w-4" />}
-                infoText="PTUs (Provisioned Throughput Units) represent dedicated model capacity in Azure AI Foundry. Input the total PTUs required monthly."
-              >
-                <FieldWithTooltip label="Provisioned PTUs per Month" tooltip="Input the total Provisioned Throughput Units (PTUs) required for Azure AI Foundry models monthly.">
-                  <Input
-                    type="number"
-                    value={inputs.ptuHoursPerMonth}
-                    onChange={e => update('ptuHoursPerMonth', Math.max(0, Number(e.target.value) || 0))}
-                    min={0}
-                    placeholder="e.g. 100"
-                  />
-                </FieldWithTooltip>
-              </EstimatorSection>
+              {/* Foundry Usage — Expanded */}
+              <FoundryServicesSection inputs={inputs} onChange={update} />
 
               {/* Fabric — now active P3 input */}
               <EstimatorSection
