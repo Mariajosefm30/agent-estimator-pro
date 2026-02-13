@@ -9,6 +9,27 @@ import {
   FourWayComparison,
   ComparisonOption,
 } from '@/types/estimator';
+import { getBlendedPricing } from '@/components/estimator/sections/FoundryServicesSection';
+
+// Calculate token-based Foundry monthly spend from ResidualInputs
+function calculateFoundryTokenSpend(inputs: ResidualInputs): number {
+  const { inputPrice, outputPrice } = getBlendedPricing(inputs.selectedFoundryModels);
+  const inputRatio = inputs.foundryInputRatio / 100;
+  const outputRatio = 1 - inputRatio;
+
+  if (inputs.foundryUsageMode === 'tpm') {
+    const monthlyTokens = inputs.foundryTpm * 60 * 24 * 30;
+    return (monthlyTokens * inputRatio / 1_000_000) * inputPrice +
+           (monthlyTokens * outputRatio / 1_000_000) * outputPrice;
+  } else if (inputs.foundryUsageMode === 'rpm') {
+    const monthlyTokens = inputs.foundryRpm * 60 * 24 * 30 * 1000;
+    return (monthlyTokens * inputRatio / 1_000_000) * inputPrice +
+           (monthlyTokens * outputRatio / 1_000_000) * outputPrice;
+  } else {
+    return (inputs.foundryMonthlyInputTokens / 1_000_000) * inputPrice +
+           (inputs.foundryMonthlyOutputTokens / 1_000_000) * outputPrice;
+  }
+}
 
 // Multipliers for P50/P90 based on workload intensity and type
 function getVariabilityMultipliers(inputs: EstimatorInputs): { p50: number; p90: number } {
@@ -279,7 +300,9 @@ export function calculateResidualOutputs(inputs: ResidualInputs, assumptions: As
   // Step 1: Total estimated retail consumption (annual)
   const totalCopilotQueries = inputs.activeUsers * inputs.queriesPerUserPerMonth * 12;
   const estimatedCopilotRetailCost = totalCopilotQueries * assumptions.copilot_credit_usd;
-  const estimatedFoundryRetailCost = inputs.ptuHoursPerMonth * 12 * assumptions.ptu_usd_per_hour;
+  const foundryPtuRetailCost = inputs.ptuHoursPerMonth * 12 * assumptions.ptu_usd_per_hour;
+  const foundryTokenMonthlySpend = calculateFoundryTokenSpend(inputs);
+  const estimatedFoundryRetailCost = foundryPtuRetailCost + foundryTokenMonthlySpend * 12;
   const estimatedFabricRetailCost = inputs.fabricMonthlySpend * 12;
   const estimatedGithubRetailCost = inputs.githubCopilotSeats * inputs.githubCopilotPricePerSeat * 12;
   const totalEstimatedRetailCost = estimatedCopilotRetailCost + estimatedFoundryRetailCost + estimatedFabricRetailCost + estimatedGithubRetailCost;

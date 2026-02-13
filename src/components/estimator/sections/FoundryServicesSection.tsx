@@ -109,7 +109,7 @@ const DEFAULT_OUTPUT_PRICE = 12.0;
 
 type UsageMode = 'tpm' | 'rpm' | 'monthly_tokens';
 
-function getBlendedPricing(selectedIds: string[]): { inputPrice: number; outputPrice: number } {
+export function getBlendedPricing(selectedIds: string[]): { inputPrice: number; outputPrice: number } {
   if (selectedIds.length === 0) {
     return { inputPrice: DEFAULT_INPUT_PRICE, outputPrice: DEFAULT_OUTPUT_PRICE };
   }
