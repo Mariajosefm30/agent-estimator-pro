@@ -16,7 +16,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename="/agent-estimator-pro/">
         <Routes>
           <Route path="/" element={<Estimator />} />
           <Route path="/estimator" element={<Estimator />} />
