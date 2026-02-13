@@ -297,6 +297,36 @@ export function FoundryServicesSection({ inputs, onChange }: FoundryServicesSect
       infoText="Microsoft Foundry covers all Azure AI services — from OpenAI models to Document Intelligence, Speech, Vision, and more. All usage decrements the unified P3 ACU pool at a 1:1 USD retail value ratio."
     >
       <div className="space-y-4">
+        {/* Live Estimate Summary — always visible */}
+        <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">Foundry Spend Estimate</span>
+            </div>
+            <Badge variant={recommendation.badge} className="text-xs">
+              {recommendation.plan}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Monthly</span>
+            <span className="text-lg font-bold text-foreground">
+              ${estimatedMonthlySpend.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Annual</span>
+            <span className="text-sm font-semibold text-muted-foreground">
+              ${(estimatedMonthlySpend * 12).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+            </span>
+          </div>
+          {estimatedMonthlySpend > 0 && (
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              {recommendation.detail}
+            </p>
+          )}
+        </div>
+
         {/* Existing PTU input */}
         <FieldWithTooltip label="Provisioned PTUs per Month" tooltip="Input the total Provisioned Throughput Units (PTUs) required for Azure AI Foundry models monthly.">
           <Input
