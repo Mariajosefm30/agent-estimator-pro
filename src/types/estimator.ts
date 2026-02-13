@@ -216,6 +216,8 @@ export interface ResidualInputs {
   foundryRpm: number;
   foundryMonthlyInputTokens: number;
   foundryMonthlyOutputTokens: number;
+  // Selected models/services for pricing
+  selectedFoundryModels: string[];
 }
 
 // Four-Way Comparison output
@@ -280,6 +282,7 @@ export const DEFAULT_RESIDUAL_INPUTS: ResidualInputs = {
   foundryRpm: 0,
   foundryMonthlyInputTokens: 0,
   foundryMonthlyOutputTokens: 0,
+  selectedFoundryModels: [],
 };
 
 // Pre-set industry scenarios
@@ -320,6 +323,7 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       foundryRpm: 0,
       foundryMonthlyInputTokens: 0,
       foundryMonthlyOutputTokens: 0,
+      selectedFoundryModels: [],
     },
     guidance: 'Strategic Insight for Healthcare: In Healthcare, P3 is the "Unified AI Budget." It allows the hospital to fund both patient-facing bots and backend research models from one pool of credits, simplifying HIPAA-compliant procurement. Fabric and GitHub costs are now included in the total footprint, maximizing P3 coverage and MACC drawdown.',
   },
@@ -349,6 +353,7 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       foundryRpm: 0,
       foundryMonthlyInputTokens: 200000000,
       foundryMonthlyOutputTokens: 50000000,
+      selectedFoundryModels: ['openai-gpt4o', 'openai-gpt4o-mini'],
     },
     guidance: 'Strategic Insight for Financial Services: With existing copilot credits partially covering agent usage, P3 efficiently handles the residual Foundry workload. The MACC contribution provides predictable spend, which is critical for regulated industries requiring auditable cost management.',
   },
@@ -378,6 +383,7 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       foundryRpm: 0,
       foundryMonthlyInputTokens: 0,
       foundryMonthlyOutputTokens: 0,
+      selectedFoundryModels: [],
     },
     guidance: 'Strategic Insight for Retail: High user volume makes P3\'s volume discount highly attractive. The unified ACU pool flexes across seasonal demand spikes without over-provisioning. Even without a MACC, P3 delivers significant savings over PAYG at this scale.',
   },
@@ -407,6 +413,7 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
       foundryRpm: 0,
       foundryMonthlyInputTokens: 500000000,
       foundryMonthlyOutputTokens: 150000000,
+      selectedFoundryModels: ['openai-gpt4o', 'deepseek-r1'],
     },
     guidance: 'Strategic Insight for Manufacturing: Foundry-heavy workloads benefit greatly from P3\'s unified coverage. Existing PTU reservations are applied first, and P3 efficiently covers the remaining Copilot and Foundry residual. This optimizes total AI spend while drawing down the MACC commitment.',
   },

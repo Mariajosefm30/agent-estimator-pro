@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Collapsible,
   CollapsibleContent,
@@ -21,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Server, ChevronDown, Info, Calculator, Zap, Brain, Eye, MessageSquare, Search, Globe, Shield } from 'lucide-react';
+import { Server, ChevronDown, Info, Calculator, Zap, Brain, Eye, Shield, Check } from 'lucide-react';
 
 interface FoundryServicesSectionProps {
   inputs: ResidualInputs;
@@ -47,34 +48,81 @@ function FieldWithTooltip({ label, tooltip, children }: { label: string; tooltip
   );
 }
 
-const AI_SERVICE_CATEGORIES = [
-  {
-    title: 'Azure AI Services',
-    icon: <Brain className="h-4 w-4" />,
-    services: [
-      'Agent Unit', 'Content Safety', 'Content Understanding', 'Document Intelligence',
-      'Search', 'AI Translator', 'BFL Flux Models', 'Cohere Models', 'Grok Models',
-      'Metrics Advisor', 'OpenAI', 'OpenAI GPT5', 'OpenAI Media',
-      'OpenAI OSS Models', 'OpenAI GPT4s', 'OpenAI Reasoning',
-    ],
-  },
-  {
-    title: 'Model Services',
-    icon: <Eye className="h-4 w-4" />,
-    services: [
-      'Computer Vision', 'DeepSeek Models', 'Face', 'Foundry Model Tools',
-      'Foundry Observability', 'Kimi-K2-Thinking Model', 'Language',
-      'Meta Llama Models', 'Microsoft Discovery', 'Mistral Models',
-      'Phi Models', 'Qwen Models', 'Speech', 'Translator Speech',
-    ],
-  },
+// ── Model catalog with per-model pricing (USD per 1M tokens) ──
+// Prices sourced from Azure Retail Prices API / public pricing pages
+export interface FoundryModel {
+  id: string;
+  name: string;
+  category: 'azure_ai' | 'model_service';
+  inputPricePer1M: number;   // USD per 1M input tokens
+  outputPricePer1M: number;  // USD per 1M output tokens
+  description: string;
+}
+
+const FOUNDRY_MODELS: FoundryModel[] = [
+  // Azure AI Services
+  { id: 'openai-gpt4o', name: 'OpenAI GPT-4o', category: 'azure_ai', inputPricePer1M: 2.50, outputPricePer1M: 10.00, description: 'Latest GPT-4o multimodal model' },
+  { id: 'openai-gpt4o-mini', name: 'OpenAI GPT-4o mini', category: 'azure_ai', inputPricePer1M: 0.15, outputPricePer1M: 0.60, description: 'Cost-efficient GPT-4o variant' },
+  { id: 'openai-gpt5', name: 'OpenAI GPT-5', category: 'azure_ai', inputPricePer1M: 5.00, outputPricePer1M: 15.00, description: 'Next-gen reasoning model' },
+  { id: 'openai-o3', name: 'OpenAI o3 (Reasoning)', category: 'azure_ai', inputPricePer1M: 10.00, outputPricePer1M: 40.00, description: 'Advanced reasoning model' },
+  { id: 'openai-o4-mini', name: 'OpenAI o4-mini (Reasoning)', category: 'azure_ai', inputPricePer1M: 1.10, outputPricePer1M: 4.40, description: 'Efficient reasoning model' },
+  { id: 'openai-media', name: 'OpenAI Media (DALL·E)', category: 'azure_ai', inputPricePer1M: 0, outputPricePer1M: 0, description: 'Image generation — priced per image' },
+  { id: 'cohere-command-r-plus', name: 'Cohere Command R+', category: 'azure_ai', inputPricePer1M: 2.50, outputPricePer1M: 10.00, description: 'Enterprise RAG-optimized model' },
+  { id: 'cohere-embed', name: 'Cohere Embed v3', category: 'azure_ai', inputPricePer1M: 0.10, outputPricePer1M: 0, description: 'Embedding model for search' },
+  { id: 'grok-3', name: 'Grok 3', category: 'azure_ai', inputPricePer1M: 3.00, outputPricePer1M: 15.00, description: 'xAI Grok via Azure Foundry' },
+  { id: 'bfl-flux', name: 'BFL Flux Models', category: 'azure_ai', inputPricePer1M: 0, outputPricePer1M: 0, description: 'Image generation — priced per image' },
+  { id: 'content-safety', name: 'Content Safety', category: 'azure_ai', inputPricePer1M: 1.00, outputPricePer1M: 0, description: 'Content moderation API' },
+  { id: 'content-understanding', name: 'Content Understanding', category: 'azure_ai', inputPricePer1M: 1.50, outputPricePer1M: 0, description: 'Multimodal content analysis' },
+  { id: 'doc-intelligence', name: 'Document Intelligence', category: 'azure_ai', inputPricePer1M: 1.50, outputPricePer1M: 0, description: 'OCR and document extraction' },
+  { id: 'ai-search', name: 'AI Search', category: 'azure_ai', inputPricePer1M: 0, outputPricePer1M: 0, description: 'Cognitive search — priced per unit' },
+  { id: 'ai-translator', name: 'AI Translator', category: 'azure_ai', inputPricePer1M: 10.00, outputPricePer1M: 0, description: 'Text translation per 1M characters' },
+  { id: 'metrics-advisor', name: 'Metrics Advisor', category: 'azure_ai', inputPricePer1M: 0.75, outputPricePer1M: 0, description: 'Anomaly detection for time series' },
+  { id: 'agent-unit', name: 'Agent Unit', category: 'azure_ai', inputPricePer1M: 0, outputPricePer1M: 0, description: 'Foundry agent orchestration' },
+  // Model Services
+  { id: 'deepseek-r1', name: 'DeepSeek R1', category: 'model_service', inputPricePer1M: 0.55, outputPricePer1M: 2.19, description: 'Open-weight reasoning model' },
+  { id: 'deepseek-v3', name: 'DeepSeek V3', category: 'model_service', inputPricePer1M: 0.27, outputPricePer1M: 1.10, description: 'Efficient open-weight model' },
+  { id: 'meta-llama-405b', name: 'Meta Llama 3.1 405B', category: 'model_service', inputPricePer1M: 5.33, outputPricePer1M: 16.00, description: 'Largest open-weight Llama model' },
+  { id: 'meta-llama-70b', name: 'Meta Llama 3.1 70B', category: 'model_service', inputPricePer1M: 0.268, outputPricePer1M: 0.354, description: 'Mid-tier Llama for balanced perf' },
+  { id: 'meta-llama-8b', name: 'Meta Llama 3.1 8B', category: 'model_service', inputPricePer1M: 0.03, outputPricePer1M: 0.061, description: 'Lightweight Llama for high volume' },
+  { id: 'mistral-large', name: 'Mistral Large', category: 'model_service', inputPricePer1M: 2.00, outputPricePer1M: 6.00, description: 'Enterprise-grade Mistral model' },
+  { id: 'mistral-small', name: 'Mistral Small', category: 'model_service', inputPricePer1M: 0.10, outputPricePer1M: 0.30, description: 'Cost-efficient Mistral model' },
+  { id: 'phi-4', name: 'Phi-4', category: 'model_service', inputPricePer1M: 0.07, outputPricePer1M: 0.14, description: 'Microsoft SLM for edge/mobile' },
+  { id: 'phi-4-mini', name: 'Phi-4 mini', category: 'model_service', inputPricePer1M: 0.013, outputPricePer1M: 0.05, description: 'Ultra-light Microsoft SLM' },
+  { id: 'qwen-72b', name: 'Qwen 2.5 72B', category: 'model_service', inputPricePer1M: 0.27, outputPricePer1M: 0.354, description: 'Alibaba large language model' },
+  { id: 'kimi-k2', name: 'Kimi-K2-Thinking', category: 'model_service', inputPricePer1M: 0.60, outputPricePer1M: 2.50, description: 'Moonshot reasoning model' },
+  { id: 'computer-vision', name: 'Computer Vision', category: 'model_service', inputPricePer1M: 1.00, outputPricePer1M: 0, description: 'Image analysis & OCR' },
+  { id: 'face-api', name: 'Face API', category: 'model_service', inputPricePer1M: 1.00, outputPricePer1M: 0, description: 'Face detection & recognition' },
+  { id: 'speech', name: 'Speech Services', category: 'model_service', inputPricePer1M: 0, outputPricePer1M: 0, description: 'STT/TTS — priced per audio hour' },
+  { id: 'translator-speech', name: 'Translator Speech', category: 'model_service', inputPricePer1M: 0, outputPricePer1M: 0, description: 'Real-time speech translation' },
+  { id: 'language', name: 'Language Services', category: 'model_service', inputPricePer1M: 0.25, outputPricePer1M: 0, description: 'NER, sentiment, key phrases' },
+  { id: 'foundry-tools', name: 'Foundry Model Tools', category: 'model_service', inputPricePer1M: 0, outputPricePer1M: 0, description: 'Tooling & evaluation framework' },
+  { id: 'foundry-observability', name: 'Foundry Observability', category: 'model_service', inputPricePer1M: 0, outputPricePer1M: 0, description: 'Monitoring & tracing' },
+  { id: 'ms-discovery', name: 'Microsoft Discovery', category: 'model_service', inputPricePer1M: 0, outputPricePer1M: 0, description: 'Content discovery & enrichment' },
 ];
 
-// Rough average cost per 1M tokens for estimation (blended across models)
-const AVG_COST_PER_1M_INPUT_TOKENS = 3.0;  // USD
-const AVG_COST_PER_1M_OUTPUT_TOKENS = 12.0; // USD
+const AZURE_AI_MODELS = FOUNDRY_MODELS.filter(m => m.category === 'azure_ai');
+const MODEL_SERVICE_MODELS = FOUNDRY_MODELS.filter(m => m.category === 'model_service');
+
+// Fallback blended prices when no models selected
+const DEFAULT_INPUT_PRICE = 3.0;
+const DEFAULT_OUTPUT_PRICE = 12.0;
 
 type UsageMode = 'tpm' | 'rpm' | 'monthly_tokens';
+
+function getBlendedPricing(selectedIds: string[]): { inputPrice: number; outputPrice: number } {
+  if (selectedIds.length === 0) {
+    return { inputPrice: DEFAULT_INPUT_PRICE, outputPrice: DEFAULT_OUTPUT_PRICE };
+  }
+  const selected = FOUNDRY_MODELS.filter(m => selectedIds.includes(m.id));
+  // Only average token-priced models (skip zero-priced services)
+  const tokenModels = selected.filter(m => m.inputPricePer1M > 0 || m.outputPricePer1M > 0);
+  if (tokenModels.length === 0) {
+    return { inputPrice: DEFAULT_INPUT_PRICE, outputPrice: DEFAULT_OUTPUT_PRICE };
+  }
+  const inputPrice = tokenModels.reduce((s, m) => s + m.inputPricePer1M, 0) / tokenModels.length;
+  const outputPrice = tokenModels.reduce((s, m) => s + m.outputPricePer1M, 0) / tokenModels.length;
+  return { inputPrice, outputPrice };
+}
 
 function getRecommendation(monthlySpend: number): { plan: string; badge: 'default' | 'secondary' | 'destructive' | 'outline'; detail: string } {
   if (monthlySpend < 50000) {
@@ -91,7 +139,6 @@ function getRecommendation(monthlySpend: number): { plan: string; badge: 'defaul
       detail: `At ~$${formatCompact(monthlySpend)}/mo, dedicated PTU capacity offers significant savings over PAYG.`,
     };
   }
-  // Over $500K — recommend Agent P3 packages
   const tiers = [
     { amount: 1000000, label: '$1M' },
     { amount: 500000, label: '$500K' },
@@ -121,40 +168,123 @@ function formatCompact(n: number): string {
   return n.toFixed(0);
 }
 
+function ModelCheckboxGrid({
+  title,
+  icon,
+  models,
+  selectedIds,
+  onToggle,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  models: FoundryModel[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <span className="text-xs font-semibold text-foreground uppercase tracking-wider">{title}</span>
+        <Badge variant="outline" className="text-[10px] ml-auto">
+          {models.filter(m => selectedIds.includes(m.id)).length}/{models.length} selected
+        </Badge>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+        {models.map(m => {
+          const isSelected = selectedIds.includes(m.id);
+          const hasTokenPricing = m.inputPricePer1M > 0 || m.outputPricePer1M > 0;
+          return (
+            <label
+              key={m.id}
+              className={`flex items-start gap-2.5 p-2 rounded-md border cursor-pointer transition-colors ${
+                isSelected
+                  ? 'border-primary/40 bg-primary/5'
+                  : 'border-border hover:border-primary/20 hover:bg-accent/30'
+              }`}
+            >
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={() => onToggle(m.id)}
+                className="mt-0.5"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-medium text-foreground truncate">{m.name}</span>
+                  {isSelected && <Check className="h-3 w-3 text-primary flex-shrink-0" />}
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{m.description}</p>
+                {hasTokenPricing && (
+                  <div className="flex gap-2 mt-1">
+                    <span className="text-[10px] text-muted-foreground">
+                      In: <span className="font-medium text-foreground">${m.inputPricePer1M}</span>/1M
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      Out: <span className="font-medium text-foreground">${m.outputPricePer1M}</span>/1M
+                    </span>
+                  </div>
+                )}
+              </div>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function FoundryServicesSection({ inputs, onChange }: FoundryServicesSectionProps) {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(true);
 
   const inputRatio = inputs.foundryInputRatio;
   const outputRatio = 100 - inputRatio;
+  const selectedModels = inputs.selectedFoundryModels;
+
+  const { inputPrice, outputPrice } = getBlendedPricing(selectedModels);
+
+  const toggleModel = (id: string) => {
+    const next = selectedModels.includes(id)
+      ? selectedModels.filter(x => x !== id)
+      : [...selectedModels, id];
+    onChange('selectedFoundryModels', next);
+  };
+
+  const selectAllCategory = (category: 'azure_ai' | 'model_service') => {
+    const catModels = FOUNDRY_MODELS.filter(m => m.category === category);
+    const allSelected = catModels.every(m => selectedModels.includes(m.id));
+    if (allSelected) {
+      onChange('selectedFoundryModels', selectedModels.filter(id => !catModels.find(m => m.id === id)));
+    } else {
+      const newIds = new Set([...selectedModels, ...catModels.map(m => m.id)]);
+      onChange('selectedFoundryModels', Array.from(newIds));
+    }
+  };
 
   // Calculate monthly spend estimate
   let estimatedMonthlySpend = 0;
   if (inputs.foundryUsageMode === 'tpm') {
-    // TPM → monthly tokens: tpm * 60 * 24 * 30
     const monthlyTokens = inputs.foundryTpm * 60 * 24 * 30;
     const inputTokens = monthlyTokens * (inputRatio / 100);
     const outputTokens = monthlyTokens * (outputRatio / 100);
     estimatedMonthlySpend =
-      (inputTokens / 1_000_000) * AVG_COST_PER_1M_INPUT_TOKENS +
-      (outputTokens / 1_000_000) * AVG_COST_PER_1M_OUTPUT_TOKENS;
+      (inputTokens / 1_000_000) * inputPrice +
+      (outputTokens / 1_000_000) * outputPrice;
   } else if (inputs.foundryUsageMode === 'rpm') {
-    // RPM → estimate ~1000 tokens per request avg
     const monthlyRequests = inputs.foundryRpm * 60 * 24 * 30;
     const tokensPerRequest = 1000;
     const monthlyTokens = monthlyRequests * tokensPerRequest;
     const inputTokens = monthlyTokens * (inputRatio / 100);
     const outputTokens = monthlyTokens * (outputRatio / 100);
     estimatedMonthlySpend =
-      (inputTokens / 1_000_000) * AVG_COST_PER_1M_INPUT_TOKENS +
-      (outputTokens / 1_000_000) * AVG_COST_PER_1M_OUTPUT_TOKENS;
+      (inputTokens / 1_000_000) * inputPrice +
+      (outputTokens / 1_000_000) * outputPrice;
   } else {
-    // Monthly tokens directly
     const inputTokens = inputs.foundryMonthlyInputTokens;
     const outputTokens = inputs.foundryMonthlyOutputTokens;
     estimatedMonthlySpend =
-      (inputTokens / 1_000_000) * AVG_COST_PER_1M_INPUT_TOKENS +
-      (outputTokens / 1_000_000) * AVG_COST_PER_1M_OUTPUT_TOKENS;
+      (inputTokens / 1_000_000) * inputPrice +
+      (outputTokens / 1_000_000) * outputPrice;
   }
 
   const recommendation = getRecommendation(estimatedMonthlySpend);
@@ -162,7 +292,7 @@ export function FoundryServicesSection({ inputs, onChange }: FoundryServicesSect
   return (
     <EstimatorSection
       title="Microsoft Foundry — Azure AI Services"
-      description="All Azure AI services covered under Agent P3"
+      description="Select models & services to estimate token-based spend"
       icon={<Server className="h-4 w-4" />}
       infoText="Microsoft Foundry covers all Azure AI services — from OpenAI models to Document Intelligence, Speech, Vision, and more. All usage decrements the unified P3 ACU pool at a 1:1 USD retail value ratio."
     >
@@ -178,31 +308,66 @@ export function FoundryServicesSection({ inputs, onChange }: FoundryServicesSect
           />
         </FieldWithTooltip>
 
-        {/* Covered Services — collapsible catalog */}
+        {/* Model / Service Selection — collapsible */}
         <Collapsible open={servicesOpen} onOpenChange={setServicesOpen}>
           <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors w-full">
             <Shield className="h-3.5 w-3.5" />
-            View All Covered Services ({AI_SERVICE_CATEGORIES.reduce((acc, c) => acc + c.services.length, 0)})
+            Select Models & Services
+            {selectedModels.length > 0 && (
+              <Badge variant="default" className="text-[10px] ml-1">
+                {selectedModels.length} selected
+              </Badge>
+            )}
             <ChevronDown className={`h-3.5 w-3.5 ml-auto transition-transform duration-200 ${servicesOpen ? 'rotate-180' : ''}`} />
           </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3 space-y-3">
-            {AI_SERVICE_CATEGORIES.map(cat => (
-              <div key={cat.title}>
-                <div className="flex items-center gap-2 mb-2">
-                  {cat.icon}
-                  <span className="text-xs font-semibold text-foreground uppercase tracking-wider">{cat.title}</span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {cat.services.map(s => (
-                    <Badge key={s} variant="outline" className="text-xs font-normal">
-                      {s}
-                    </Badge>
-                  ))}
+          <CollapsibleContent className="mt-3 space-y-4">
+            {/* Select All toggles */}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => selectAllCategory('azure_ai')}
+                className="text-[11px] font-medium text-primary hover:text-primary/80 underline underline-offset-2"
+              >
+                Toggle All Azure AI
+              </button>
+              <span className="text-muted-foreground">•</span>
+              <button
+                type="button"
+                onClick={() => selectAllCategory('model_service')}
+                className="text-[11px] font-medium text-primary hover:text-primary/80 underline underline-offset-2"
+              >
+                Toggle All Model Services
+              </button>
+            </div>
+
+            <ModelCheckboxGrid
+              title="Azure AI Services"
+              icon={<Brain className="h-4 w-4" />}
+              models={AZURE_AI_MODELS}
+              selectedIds={selectedModels}
+              onToggle={toggleModel}
+            />
+            <ModelCheckboxGrid
+              title="Model Services"
+              icon={<Eye className="h-4 w-4" />}
+              models={MODEL_SERVICE_MODELS}
+              selectedIds={selectedModels}
+              onToggle={toggleModel}
+            />
+
+            {selectedModels.length > 0 && (
+              <div className="p-2.5 rounded-md bg-muted/50 border border-border">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Blended avg pricing (selected models):</span>
+                  <span className="font-medium text-foreground">
+                    ${inputPrice.toFixed(2)}/1M in • ${outputPrice.toFixed(2)}/1M out
+                  </span>
                 </div>
               </div>
-            ))}
+            )}
+
             <p className="text-xs text-muted-foreground italic">
-              All services decrement the P3 ACU pool at a 1:1 USD retail value ratio.
+              Prices from Azure Retail Prices API. All services decrement P3 ACU pool at 1:1 USD retail ratio.
             </p>
           </CollapsibleContent>
         </Collapsible>
@@ -217,6 +382,14 @@ export function FoundryServicesSection({ inputs, onChange }: FoundryServicesSect
           <CollapsibleContent className="mt-3">
             <Card className="border-border bg-muted/30">
               <CardContent className="pt-4 space-y-4">
+                {/* Pricing source indicator */}
+                {selectedModels.length > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground bg-primary/5 px-3 py-1.5 rounded-md border border-primary/10">
+                    <Check className="h-3.5 w-3.5 text-primary" />
+                    Using blended pricing from {selectedModels.length} selected model{selectedModels.length > 1 ? 's' : ''}
+                  </div>
+                )}
+
                 {/* Input / Output Ratio */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -258,7 +431,7 @@ export function FoundryServicesSection({ inputs, onChange }: FoundryServicesSect
 
                 {/* Mode-specific inputs */}
                 {inputs.foundryUsageMode === 'tpm' && (
-                  <FieldWithTooltip label="Tokens per Minute (TPM)" tooltip="Average tokens processed per minute across all models.">
+                  <FieldWithTooltip label="Tokens per Minute (TPM)" tooltip="Average tokens processed per minute across all selected models.">
                     <Input
                       type="number"
                       value={inputs.foundryTpm}
@@ -317,6 +490,12 @@ export function FoundryServicesSection({ inputs, onChange }: FoundryServicesSect
                     <span className="text-sm font-semibold text-foreground">
                       ${(estimatedMonthlySpend * 12).toLocaleString('en-US', { maximumFractionDigits: 0 })}
                     </span>
+                  </div>
+
+                  {/* Pricing breakdown */}
+                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                    <div>Input rate: <span className="font-medium text-foreground">${inputPrice.toFixed(2)}</span>/1M tokens</div>
+                    <div>Output rate: <span className="font-medium text-foreground">${outputPrice.toFixed(2)}</span>/1M tokens</div>
                   </div>
 
                   {/* Recommendation */}
