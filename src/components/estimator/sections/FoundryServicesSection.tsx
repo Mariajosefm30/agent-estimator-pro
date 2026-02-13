@@ -430,7 +430,17 @@ export function FoundryServicesSection({ inputs, onChange }: FoundryServicesSect
                   </div>
                   <Slider
                     value={[inputRatio]}
-                    onValueChange={([v]) => onChange('foundryInputRatio', v)}
+                    onValueChange={([v]) => {
+                      onChange('foundryInputRatio', v);
+                      // In monthly_tokens mode, redistribute total tokens based on new ratio
+                      if (inputs.foundryUsageMode === 'monthly_tokens') {
+                        const total = inputs.foundryMonthlyInputTokens + inputs.foundryMonthlyOutputTokens;
+                        if (total > 0) {
+                          onChange('foundryMonthlyInputTokens', Math.round(total * (v / 100)));
+                          onChange('foundryMonthlyOutputTokens', Math.round(total * ((100 - v) / 100)));
+                        }
+                      }
+                    }}
                     min={10}
                     max={95}
                     step={5}
