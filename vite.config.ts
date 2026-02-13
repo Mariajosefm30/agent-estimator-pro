@@ -4,7 +4,7 @@ import path from 'path'
 import { componentTagger } from 'lovable-tagger'
 
 export default defineConfig(({ mode }) => ({
-  base: process.env.GITHUB_ACTIONS ? '/maf-quickstart/' : '/',
+  base: process.env.GITHUB_ACTIONS ? '/agent-estimator-pro/' : '/',
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
