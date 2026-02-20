@@ -3,7 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import UseCaseDiscovery from "./pages/UseCaseDiscovery";
+import BusinessValue from "./pages/BusinessValue";
 import Estimator from "./pages/Estimator";
 import Results from "./pages/Results";
 import Assumptions from "./pages/Assumptions";
@@ -16,9 +17,10 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-     <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
-          <Route path="/" element={<Estimator />} />
+          <Route path="/" element={<UseCaseDiscovery />} />
+          <Route path="/value" element={<BusinessValue />} />
           <Route path="/estimator" element={<Estimator />} />
           <Route path="/results" element={<Results />} />
           <Route path="/assumptions" element={<Assumptions />} />
