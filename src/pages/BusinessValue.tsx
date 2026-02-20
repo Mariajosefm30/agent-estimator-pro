@@ -121,22 +121,30 @@ export default function BusinessValue() {
             <p className="text-sm text-white/50 font-medium">Total Estimated Annual Value</p>
             <p className="text-5xl font-bold text-white mt-2">{formatCurrencyShort(totalAnnualValue)}</p>
             <p className="text-sm text-white/40 mt-1">labor value recaptured per year</p>
-            <div className="flex justify-center gap-8 mt-4">
-              <div className="text-center">
-                <div className="flex items-center gap-1.5 text-white/50">
-                  <Users className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium">FTE Saved*</span>
+            <div className="mt-6 grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+              <div className="rounded-xl bg-white/[0.08] border border-white/10 p-3 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-white/60 text-xs mb-1">
+                  <Users className="h-3 w-3" />
+                  FTE Saved*
                 </div>
-                <p className="text-lg font-bold text-white mt-0.5">{totalFTEs.toFixed(1)}</p>
-                <p className="text-[10px] text-white/30">FTEs / month</p>
+                <div className="text-2xl font-bold text-white">{totalFTEs.toFixed(1)}</div>
+                <div className="text-xs text-white/40">FTEs / month</div>
               </div>
-              <div className="text-center">
-                <div className="flex items-center gap-1.5 text-white/50">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium">Hours Saved</span>
+              <div className="rounded-xl bg-white/[0.08] border border-white/10 p-3 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-white/60 text-xs mb-1">
+                  <Clock className="h-3 w-3" />
+                  Hours Saved
                 </div>
-                <p className="text-lg font-bold text-white mt-0.5">{totalHours.toLocaleString()}</p>
-                <p className="text-[10px] text-white/30">hours / month</p>
+                <div className="text-2xl font-bold text-white">{totalHours.toLocaleString()}</div>
+                <div className="text-xs text-white/40">hours / month</div>
+              </div>
+              <div className="rounded-xl bg-white/[0.08] border border-white/10 p-3 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-white/60 text-xs mb-1">
+                  <TrendingUp className="h-3 w-3" />
+                  Reallocation
+                </div>
+                <div className="text-2xl font-bold text-white">0 Layoffs</div>
+                <div className="text-xs text-white/40">redirect to growth</div>
               </div>
             </div>
             <p className="text-[10px] text-white/30 mt-3 italic">*FTE = Full-Time Equivalent — the labor hours freed up, expressed as headcount</p>
@@ -146,6 +154,47 @@ export default function BusinessValue() {
         {/* Use Case Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {valueCards.map((card) => <ValueCardComponent key={card.useCase.id} card={card} />)}
+        </div>
+
+        {/* Reallocation Conversation */}
+        <div className="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/30">
+              <TrendingUp className="h-4 w-4 text-violet-300" />
+            </div>
+            <h3 className="text-sm font-semibold text-white">How to drive the reallocation conversation</h3>
+          </div>
+          <p className="text-xs text-violet-200/70 mb-4 leading-relaxed">
+            These hours are not about reducing headcount — they are about redirecting your best people toward work that actually grows the business. Use this framing with your customer:
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <div className="text-lg mb-2">🎯</div>
+              <div className="text-xs font-semibold text-white mb-1">Redeploy to Growth</div>
+              <div className="text-xs text-white/50 leading-relaxed">
+                Shift freed capacity toward revenue-generating activities — new accounts, upsell motions, or product expansion.
+              </div>
+            </div>
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <div className="text-lg mb-2">🧠</div>
+              <div className="text-xs font-semibold text-white mb-1">Absorb Natural Attrition</div>
+              <div className="text-xs text-white/50 leading-relaxed">
+                As people retire or leave, don't backfill those roles. Let AI absorb the workload and reinvest the salary budget.
+              </div>
+            </div>
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <div className="text-lg mb-2">📈</div>
+              <div className="text-xs font-semibold text-white mb-1">Scale Without Hiring</div>
+              <div className="text-xs text-white/50 leading-relaxed">
+                Handle 2–3x the volume with the same team size. Grow the business without growing the headcount budget.
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <p className="text-xs text-violet-300/70 italic">
+              💡 Seller tip: Ask the customer "Where would you invest if you got 20% of your team's time back?" — let them paint the picture of value, not you.
+            </p>
+          </div>
         </div>
 
         {/* Assumptions */}
