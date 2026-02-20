@@ -34,31 +34,31 @@ export function ValueContextBar({ onDismiss }: ValueContextBarProps) {
   const useCases = USE_CASES.filter((uc) => ctx.useCaseIds.includes(uc.id));
 
   return (
-    <div className="rounded-xl border border-blue-400/20 bg-blue-500/10 px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
+    <div className="rounded-xl border border-border bg-muted px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
 
-      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
-        <TrendingUp className="h-4 w-4" />
+      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <TrendingUp className="h-4 w-4 text-primary" />
         Value Context
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
         {segConfig && (
-          <Badge className="bg-white/10 text-white/70 border-white/20 text-xs">
+          <Badge variant="secondary" className="text-xs">
             {segConfig.icon} {segConfig.label}
           </Badge>
         )}
         {indConfig && (
-          <Badge className="bg-white/10 text-white/70 border-white/20 text-xs">
+          <Badge variant="secondary" className="text-xs">
             {indConfig.icon} {indConfig.label}
           </Badge>
         )}
         {useCases.map((uc) => (
-          <Badge key={uc.id} className="bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs">
+          <Badge key={uc.id} variant="outline" className="text-xs text-primary border-primary/30">
             {uc.icon} {uc.shortLabel}
           </Badge>
         ))}
         {ctx.totalAnnualValue > 0 && (
-          <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
+          <Badge className="bg-primary/15 text-primary border-primary/30 text-xs">
             ~{formatCurrencyShort(ctx.totalAnnualValue)} / yr potential value
           </Badge>
         )}
@@ -69,13 +69,13 @@ export function ValueContextBar({ onDismiss }: ValueContextBarProps) {
           variant="ghost"
           size="sm"
           onClick={() => navigate('/value')}
-          className="text-blue-300 hover:text-blue-200 hover:bg-blue-500/20 h-7 px-2 text-xs gap-1"
+          className="text-primary hover:text-primary/80 h-7 px-2 text-xs gap-1"
         >
           <Pencil className="h-3 w-3" />
           Edit
         </Button>
         {onDismiss && (
-          <Button variant="ghost" size="icon" onClick={onDismiss} className="h-7 w-7 text-white/40 hover:text-white hover:bg-white/10">
+          <Button variant="ghost" size="icon" onClick={onDismiss} className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent">
             <X className="h-3.5 w-3.5" />
           </Button>
         )}
