@@ -6,6 +6,7 @@ import { OptimizationMatrix } from '@/components/estimator/OptimizationMatrix';
 import { P3CoverageExplorer } from '@/components/estimator/P3CoverageExplorer';
 import { FoundryServicesSection } from '@/components/estimator/sections/FoundryServicesSection';
 import { SellerTip } from '@/components/estimator/SellerTip';
+import { ValueContextBar } from '@/components/estimator/ValueContextBar';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useSaveScenario } from '@/hooks/useScenarios';
 import { calculateResidualOutputs, calculateFourWayComparison } from '@/lib/calculations';
@@ -50,8 +51,15 @@ function FieldWithTooltip({ label, tooltip, children }: { label: string; tooltip
 }
 
 export default function Estimator() {
-  const [inputs, setInputs] = useState<ResidualInputs>(DEFAULT_RESIDUAL_INPUTS);
+  const [inputs, setInputs] = useState<ResidualInputs>(() => {
+    const raw = sessionStorage.getItem('residual_inputs');
+    if (raw) {
+      try { return { ...DEFAULT_RESIDUAL_INPUTS, ...JSON.parse(raw) }; } catch { /* ignore */ }
+    }
+    return DEFAULT_RESIDUAL_INPUTS;
+  });
   const [coverageOpen, setCoverageOpen] = useState(false);
+  const [showValueBar, setShowValueBar] = useState(() => !!sessionStorage.getItem('value_context'));
 
   const { data: assumptions, isLoading: assumptionsLoading } = useAssumptions();
   const navigate = useNavigate();
@@ -139,12 +147,17 @@ export default function Estimator() {
 
   return (
     <Layout>
+      {showValueBar && (
+        <div className="mb-4">
+          <ValueContextBar onDismiss={() => setShowValueBar(false)} />
+        </div>
+      )}
       <div className="mb-6 text-center">
         <h1 className="text-2xl font-bold text-foreground">
-          Microsoft Agent P3 Estimator
+          Azure AI Investment Estimator
         </h1>
         <p className="text-muted-foreground mt-1 max-w-2xl mx-auto">
-          Enter your customer's AI usage and existing commitments to see how P3 covers the residual workload
+          Model the infrastructure investment to unlock your customer's AI value
         </p>
         <div className="mt-3 max-w-2xl mx-auto">
           <Collapsible open={coverageOpen} onOpenChange={setCoverageOpen}>
