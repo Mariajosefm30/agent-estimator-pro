@@ -233,6 +233,31 @@ export default function Estimator() {
   const [coverageOpen, setCoverageOpen] = useState(false);
   const [showValueBar, setShowValueBar] = useState(() => !!sessionStorage.getItem('value_context'));
 
+  const segmentTips: Record<string, Record<string, string>> = {
+    smb: {
+      macc: "SMB tip: Most SMBs don't have a MACC commitment. Focus the conversation on P3's pay-as-you-go flexibility and the savings vs PAYG comparison instead.",
+      aco: "SMB tip: ACO discounts for SMB are typically 5–8%. If the customer has no EA, P3's built-in discount is likely their best option.",
+      foundry: "SMB tip: SMBs rarely run dedicated PTUs. Keep Foundry inputs at zero unless they have a specific model inference workload already identified.",
+      macc_switch: "SMB tip: Skip the MACC section — toggle it off. Most SMBs are not MACC-eligible and it can confuse the conversation.",
+    },
+    smc: {
+      macc: "SMC tip: Some SMC customers have a MACC but it's often small. Ask about their Azure commitment before assuming — it can be a great P3 accelerator.",
+      aco: "SMC tip: SMC ACO discounts typically range from 8–12%. Compare this against the P3 tier discount to show where P3 wins.",
+      foundry: "SMC tip: SMC customers moving to AI often start with Copilot Studio before adding Foundry. Use the Foundry inputs to show the value of a unified P3 pool as they scale.",
+      macc_switch: "SMC tip: If the customer has a MACC, P3 is a powerful accelerator — it burns the full commitment upfront rather than slowly via PAYG.",
+    },
+    enterprise: {
+      macc: "Enterprise tip: MACC drawdown is often the #1 CFO priority. P3 burns the full commitment amount upfront — show the total commitment met timeline to make this tangible.",
+      aco: "Enterprise tip: Enterprise ACO discounts are typically 12–20%. If their ACO exceeds the P3 tier discount, shift the conversation to MACC burn — that's where P3 wins.",
+      foundry: "Enterprise tip: Enterprise customers often have existing PTU reservations. Enter those in Existing Commitments — P3 only kicks in after those are exhausted, which makes the residual story cleaner.",
+      macc_switch: "Enterprise tip: Always toggle MACC on for Enterprise. Even if they say they don't have one, ask — most large EA customers have an active MACC they may not be tracking closely.",
+    },
+  };
+
+  const discoveryRaw2 = sessionStorage.getItem('discovery');
+  const discoverySegment = discoveryRaw2 ? JSON.parse(discoveryRaw2)?.segment ?? 'smc' : 'smc';
+  const tips = segmentTips[discoverySegment] ?? segmentTips.smc;
+
   const { data: assumptions, isLoading: assumptionsLoading } = useAssumptions();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -432,7 +457,7 @@ export default function Estimator() {
                 infoText="Enter the customer's ACO discount and any standalone quotes for PTU Reservations or Copilot Credits to power the four-way comparison."
               >
                 <div className="flex items-center gap-1.5 mb-3">
-                  <SellerTip tip="Seller Tip: Enter the customer's specific ACO discount percentage from their Enterprise Agreement or contract. This allows the tool to compare P3's value against their existing Azure discounts." />
+                  <SellerTip tip={tips.aco} />
                   <span className="text-xs text-primary font-medium">Seller Tip</span>
                 </div>
                 <div className="grid sm:grid-cols-3 gap-4">
@@ -479,7 +504,7 @@ export default function Estimator() {
                 infoText="If the customer already has Copilot credits or Foundry PTU reservations, enter them here. These are applied before P3 in Microsoft's benefit hierarchy."
               >
                 <div className="flex items-center gap-1.5 mb-3">
-                  <SellerTip tip="Guidance: If a customer already has PTUs or Copilot Credits, P3 only kicks in AFTER those are exhausted. Use this to show how P3 acts as the 'Safety Net' for overflow usage." />
+                  <SellerTip tip={tips.foundry} />
                   <span className="text-xs text-primary font-medium">Seller Tip</span>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -512,7 +537,7 @@ export default function Estimator() {
                 infoText="If the customer has an active MACC, P3 purchases can count toward burning it down. Specify what percentage of the P3 cost contributes to the MACC."
               >
                 <div className="flex items-center gap-1.5 mb-3">
-                  <SellerTip tip="Tip for Sellers: P3 is a 'MACC Accelerator.' Unlike PAYG, which burns MACC as usage happens, P3 burns the full commitment amount upfront, helping customers meet their annual MACC targets instantly while securing a discount." />
+                  <SellerTip tip={tips.macc} />
                   <span className="text-xs text-primary font-medium">Seller Tip</span>
                 </div>
                 <div className="space-y-4">
