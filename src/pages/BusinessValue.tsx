@@ -140,11 +140,11 @@ export default function BusinessValue() {
               </div>
               <div className="rounded-xl bg-white/[0.08] border border-white/10 p-3 text-center">
                 <div className="flex items-center justify-center gap-1.5 text-white/60 text-xs mb-1">
-                  <TrendingUp className="h-3 w-3" />
-                  Reallocation
+                  <Sparkles className="h-3 w-3" />
+                  Efficiency Gain
                 </div>
-                <div className="text-2xl font-bold text-white">0 Layoffs</div>
-                <div className="text-xs text-white/40">redirect to growth</div>
+                <div className="text-2xl font-bold text-white">+{Math.round((totalHours / 160) * 12)}%</div>
+                <div className="text-xs text-white/40">capacity unlocked</div>
               </div>
             </div>
             <p className="text-[10px] text-white/30 mt-3 italic">*FTE = Full-Time Equivalent — the labor hours freed up, expressed as headcount</p>
@@ -154,47 +154,6 @@ export default function BusinessValue() {
         {/* Use Case Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {valueCards.map((card) => <ValueCardComponent key={card.useCase.id} card={card} />)}
-        </div>
-
-        {/* Reallocation Conversation */}
-        <div className="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/30">
-              <TrendingUp className="h-4 w-4 text-violet-300" />
-            </div>
-            <h3 className="text-sm font-semibold text-white">How to drive the reallocation conversation</h3>
-          </div>
-          <p className="text-xs text-violet-200/70 mb-4 leading-relaxed">
-            These hours are not about reducing headcount — they are about redirecting your best people toward work that actually grows the business. Use this framing with your customer:
-          </p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-lg mb-2">🚀</div>
-              <div className="text-xs font-semibold text-white mb-1">Expand to New Markets</div>
-              <div className="text-xs text-white/50 leading-relaxed">
-                Redirect team energy toward entering new geographies, segments, or product lines that were previously out of reach.
-              </div>
-            </div>
-            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-lg mb-2">⚡</div>
-              <div className="text-xs font-semibold text-white mb-1">Accelerate Strategic Priorities</div>
-              <div className="text-xs text-white/50 leading-relaxed">
-                Free your best people from repetitive work so they can focus on innovation, customer relationships, and competitive differentiation.
-              </div>
-            </div>
-            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-lg mb-2">📊</div>
-              <div className="text-xs font-semibold text-white mb-1">Scale Operations Without Friction</div>
-              <div className="text-xs text-white/50 leading-relaxed">
-                Handle significantly more volume, complexity, and customer demand with the same infrastructure — no bottlenecks, no delays.
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <p className="text-xs text-violet-300/70 italic">
-              💡 Seller tip: Ask the customer "If this process ran itself, where would your team focus next?" — let them define the strategic opportunity in their own words.
-            </p>
-          </div>
         </div>
 
         {/* Assumptions */}
