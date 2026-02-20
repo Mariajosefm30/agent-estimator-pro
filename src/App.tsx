@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import UseCaseDiscovery from "./pages/UseCaseDiscovery";
 import BusinessValue from "./pages/BusinessValue";
 import Estimator from "./pages/Estimator";
+import ExportReport from "./pages/ExportReport";
 import Results from "./pages/Results";
 import Assumptions from "./pages/Assumptions";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<UseCaseDiscovery />} />
           <Route path="/value" element={<BusinessValue />} />
           <Route path="/estimator" element={<Estimator />} />
+          <Route path="/report" element={<ExportReport />} />
           <Route path="/results" element={<Results />} />
           <Route path="/assumptions" element={<Assumptions />} />
           <Route path="*" element={<NotFound />} />
