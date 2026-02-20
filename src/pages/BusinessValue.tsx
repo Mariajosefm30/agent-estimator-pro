@@ -125,7 +125,7 @@ export default function BusinessValue() {
               <div className="text-center">
                 <div className="flex items-center gap-1.5 text-white/50">
                   <Users className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium">FTE Equivalent</span>
+                  <span className="text-xs font-medium">FTE Saved*</span>
                 </div>
                 <p className="text-lg font-bold text-white mt-0.5">{totalFTEs.toFixed(1)}</p>
                 <p className="text-[10px] text-white/30">FTEs / month</p>
@@ -139,6 +139,7 @@ export default function BusinessValue() {
                 <p className="text-[10px] text-white/30">hours / month</p>
               </div>
             </div>
+            <p className="text-[10px] text-white/30 mt-3 italic">*FTE = Full-Time Equivalent — the labor hours freed up, expressed as headcount</p>
           </div>
         </div>
 
@@ -198,7 +199,7 @@ export default function BusinessValue() {
             <ArrowLeft className="mr-1 h-4 w-4" /> Back to Use Cases
           </Button>
           <Button onClick={handleProceed} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-            See Investment Required
+            Create or Adapt Your Own Scenario
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
