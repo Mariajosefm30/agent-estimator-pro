@@ -169,30 +169,30 @@ export default function BusinessValue() {
           </p>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-lg mb-2">🎯</div>
-              <div className="text-xs font-semibold text-white mb-1">Redeploy to Growth</div>
+              <div className="text-lg mb-2">🚀</div>
+              <div className="text-xs font-semibold text-white mb-1">Expand to New Markets</div>
               <div className="text-xs text-white/50 leading-relaxed">
-                Shift freed capacity toward revenue-generating activities — new accounts, upsell motions, or product expansion.
+                Redirect team energy toward entering new geographies, segments, or product lines that were previously out of reach.
               </div>
             </div>
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-lg mb-2">🧠</div>
-              <div className="text-xs font-semibold text-white mb-1">Absorb Natural Attrition</div>
+              <div className="text-lg mb-2">⚡</div>
+              <div className="text-xs font-semibold text-white mb-1">Accelerate Strategic Priorities</div>
               <div className="text-xs text-white/50 leading-relaxed">
-                As people retire or leave, don't backfill those roles. Let AI absorb the workload and reinvest the salary budget.
+                Free your best people from repetitive work so they can focus on innovation, customer relationships, and competitive differentiation.
               </div>
             </div>
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-lg mb-2">📈</div>
-              <div className="text-xs font-semibold text-white mb-1">Scale Without Hiring</div>
+              <div className="text-lg mb-2">📊</div>
+              <div className="text-xs font-semibold text-white mb-1">Scale Operations Without Friction</div>
               <div className="text-xs text-white/50 leading-relaxed">
-                Handle 2–3x the volume with the same team size. Grow the business without growing the headcount budget.
+                Handle significantly more volume, complexity, and customer demand with the same infrastructure — no bottlenecks, no delays.
               </div>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-white/10">
             <p className="text-xs text-violet-300/70 italic">
-              💡 Seller tip: Ask the customer "Where would you invest if you got 20% of your team's time back?" — let them paint the picture of value, not you.
+              💡 Seller tip: Ask the customer "If this process ran itself, where would your team focus next?" — let them define the strategic opportunity in their own words.
             </p>
           </div>
         </div>
