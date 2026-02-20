@@ -580,9 +580,9 @@ export default function Estimator() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 pt-2">
-                <Button className="gap-2" onClick={handleExport}>
+                <Button className="gap-2" onClick={() => navigate('/report')}>
                   <Download className="h-4 w-4" />
-                  Export to CSV
+                  Export Report
                 </Button>
                 <Button variant="outline" onClick={handleReset} className="gap-2">
                   <RotateCcw className="h-4 w-4" />
