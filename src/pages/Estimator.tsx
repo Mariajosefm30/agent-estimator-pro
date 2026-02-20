@@ -10,16 +10,14 @@ import { ValueContextBar } from '@/components/estimator/ValueContextBar';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useSaveScenario } from '@/hooks/useScenarios';
 import { calculateResidualOutputs, calculateFourWayComparison } from '@/lib/calculations';
-import { ResidualInputs, DEFAULT_RESIDUAL_INPUTS, PRESET_SCENARIOS } from '@/types/estimator';
+import { ResidualInputs, DEFAULT_RESIDUAL_INPUTS } from '@/types/estimator';
 import { EstimatorSection } from '@/components/estimator/EstimatorSection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Download, RotateCcw, Users, Server, FileCheck, Coins, Info, Layers, Sparkles, ArrowRight, Database, Code, Percent, Receipt, ChevronDown } from 'lucide-react';
+
+import { Download, RotateCcw, Users, Server, FileCheck, Coins, Info, Layers, Database, Code, Percent, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -53,10 +51,184 @@ function FieldWithTooltip({ label, tooltip, children }: { label: string; tooltip
 export default function Estimator() {
   const [inputs, setInputs] = useState<ResidualInputs>(() => {
     const raw = sessionStorage.getItem('residual_inputs');
+    const discoveryRaw = sessionStorage.getItem('discovery');
+
+    let base = { ...DEFAULT_RESIDUAL_INPUTS };
+
     if (raw) {
-      try { return { ...DEFAULT_RESIDUAL_INPUTS, ...JSON.parse(raw) }; } catch { /* ignore */ }
+      try { base = { ...base, ...JSON.parse(raw) }; } catch { /* ignore */ }
     }
-    return DEFAULT_RESIDUAL_INPUTS;
+
+    // Apply use-case-specific overrides on top of segment defaults
+    if (discoveryRaw) {
+      try {
+        const discovery = JSON.parse(discoveryRaw);
+        const useCaseOverrides: Record<string, Partial<typeof DEFAULT_RESIDUAL_INPUTS>> = {
+          contact_center: {
+            activeUsers: 800,
+            queriesPerUserPerMonth: 100,
+            ptuHoursPerMonth: 40,
+            fabricMonthlySpend: 500,
+            githubCopilotSeats: 20,
+          },
+          claims_processing: {
+            activeUsers: 300,
+            queriesPerUserPerMonth: 50,
+            ptuHoursPerMonth: 30,
+            fabricMonthlySpend: 2000,
+            githubCopilotSeats: 15,
+          },
+          fraud_aml: {
+            activeUsers: 80,
+            queriesPerUserPerMonth: 60,
+            ptuHoursPerMonth: 80,
+            fabricMonthlySpend: 4000,
+            githubCopilotSeats: 10,
+          },
+          predictive_maintenance: {
+            activeUsers: 300,
+            queriesPerUserPerMonth: 30,
+            ptuHoursPerMonth: 80,
+            fabricMonthlySpend: 5000,
+            githubCopilotSeats: 15,
+          },
+          contract_lifecycle: {
+            activeUsers: 150,
+            queriesPerUserPerMonth: 20,
+            ptuHoursPerMonth: 10,
+            fabricMonthlySpend: 1500,
+            githubCopilotSeats: 10,
+          },
+          knowledge_mgmt: {
+            activeUsers: 600,
+            queriesPerUserPerMonth: 20,
+            ptuHoursPerMonth: 10,
+            fabricMonthlySpend: 1000,
+            githubCopilotSeats: 25,
+          },
+          order_to_cash: {
+            activeUsers: 200,
+            queriesPerUserPerMonth: 35,
+            ptuHoursPerMonth: 20,
+            fabricMonthlySpend: 1000,
+            githubCopilotSeats: 10,
+          },
+          loan_application: {
+            activeUsers: 200,
+            queriesPerUserPerMonth: 40,
+            ptuHoursPerMonth: 25,
+            fabricMonthlySpend: 1500,
+            githubCopilotSeats: 10,
+          },
+          supply_chain: {
+            activeUsers: 300,
+            queriesPerUserPerMonth: 40,
+            ptuHoursPerMonth: 60,
+            fabricMonthlySpend: 3000,
+            githubCopilotSeats: 20,
+          },
+          rev_cycle: {
+            activeUsers: 250,
+            queriesPerUserPerMonth: 30,
+            ptuHoursPerMonth: 20,
+            fabricMonthlySpend: 2000,
+            githubCopilotSeats: 15,
+          },
+          regulatory_intelligence: {
+            activeUsers: 100,
+            queriesPerUserPerMonth: 20,
+            ptuHoursPerMonth: 15,
+            fabricMonthlySpend: 2000,
+            githubCopilotSeats: 10,
+          },
+          market_research: {
+            activeUsers: 100,
+            queriesPerUserPerMonth: 30,
+            ptuHoursPerMonth: 20,
+            fabricMonthlySpend: 2000,
+            githubCopilotSeats: 10,
+          },
+          content_gen_ops: {
+            activeUsers: 200,
+            queriesPerUserPerMonth: 40,
+            ptuHoursPerMonth: 15,
+            fabricMonthlySpend: 500,
+            githubCopilotSeats: 30,
+          },
+          frontline_productivity: {
+            activeUsers: 1000,
+            queriesPerUserPerMonth: 15,
+            ptuHoursPerMonth: 10,
+            fabricMonthlySpend: 500,
+            githubCopilotSeats: 10,
+          },
+          rd_product_design: {
+            activeUsers: 150,
+            queriesPerUserPerMonth: 25,
+            ptuHoursPerMonth: 50,
+            fabricMonthlySpend: 3000,
+            githubCopilotSeats: 40,
+          },
+          inventory_planning: {
+            activeUsers: 100,
+            queriesPerUserPerMonth: 20,
+            ptuHoursPerMonth: 30,
+            fabricMonthlySpend: 4000,
+            githubCopilotSeats: 10,
+          },
+          agentic_commerce: {
+            activeUsers: 2000,
+            queriesPerUserPerMonth: 25,
+            ptuHoursPerMonth: 30,
+            fabricMonthlySpend: 1000,
+            githubCopilotSeats: 15,
+          },
+          interactive_brand_agent: {
+            activeUsers: 1000,
+            queriesPerUserPerMonth: 30,
+            ptuHoursPerMonth: 20,
+            fabricMonthlySpend: 500,
+            githubCopilotSeats: 10,
+          },
+          procurement_sourcing: {
+            activeUsers: 150,
+            queriesPerUserPerMonth: 25,
+            ptuHoursPerMonth: 10,
+            fabricMonthlySpend: 1000,
+            githubCopilotSeats: 10,
+          },
+          field_operations: {
+            activeUsers: 500,
+            queriesPerUserPerMonth: 20,
+            ptuHoursPerMonth: 30,
+            fabricMonthlySpend: 1000,
+            githubCopilotSeats: 10,
+          },
+          personalized_patient: {
+            activeUsers: 2000,
+            queriesPerUserPerMonth: 10,
+            ptuHoursPerMonth: 15,
+            fabricMonthlySpend: 1500,
+            githubCopilotSeats: 10,
+          },
+          agentic_capital: {
+            activeUsers: 50,
+            queriesPerUserPerMonth: 30,
+            ptuHoursPerMonth: 40,
+            fabricMonthlySpend: 5000,
+            githubCopilotSeats: 20,
+          },
+        };
+
+        // Apply the first selected use case's overrides
+        const firstUseCaseId = discovery.selectedUseCaseIds?.[0];
+        if (firstUseCaseId && useCaseOverrides[firstUseCaseId]) {
+          base = { ...base, ...useCaseOverrides[firstUseCaseId] };
+        }
+      } catch { /* ignore */ }
+    }
+
+    return base;
   });
   const [coverageOpen, setCoverageOpen] = useState(false);
   const [showValueBar, setShowValueBar] = useState(() => !!sessionStorage.getItem('value_context'));
@@ -74,10 +246,6 @@ export default function Estimator() {
     toast({ title: 'Reset complete', description: 'All inputs have been reset to defaults.' });
   }, [toast]);
 
-  const loadPreset = useCallback((presetInputs: ResidualInputs) => {
-    setInputs(presetInputs);
-    toast({ title: 'Scenario loaded', description: 'Inputs have been pre-populated. Switch to "Create Your Own Scenario" to view results.' });
-  }, [toast]);
 
   const outputs = useMemo(() => {
     if (!assumptions) return null;
@@ -173,19 +341,7 @@ export default function Estimator() {
         </div>
       </div>
 
-      <Tabs defaultValue="scenarios" className="w-full">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-          <TabsTrigger value="scenarios" className="gap-2">
-            <ArrowRight className="h-4 w-4" />
-            Quick Scenarios
-          </TabsTrigger>
-          <TabsTrigger value="estimator" className="gap-2">
-            <Sparkles className="h-4 w-4" />
-            Create Your Own Scenario
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="estimator">
+      <div>
           <div className="grid gap-6 lg:grid-cols-[1fr,400px]">
             {/* Left: Input Form */}
             <div className="space-y-4">
@@ -416,71 +572,7 @@ export default function Estimator() {
               {comparison && <OptimizationMatrix comparison={comparison} />}
             </div>
           </div>
-        </TabsContent>
-
-        <TabsContent value="scenarios">
-          <div className="space-y-6">
-            <div className="text-center max-w-2xl mx-auto">
-              <h2 className="text-xl font-semibold text-foreground mb-2">Quick Scenarios</h2>
-              <p className="text-sm text-muted-foreground">
-                Select an industry scenario to pre-populate the estimator with typical values. Use these as starting points, then customize for your specific customer.
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {PRESET_SCENARIOS.map(scenario => (
-                <Card key={scenario.id} className="border border-border hover:border-primary/40 transition-colors">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{scenario.icon}</span>
-                      <div>
-                        <CardTitle className="text-base">{scenario.name}</CardTitle>
-                        <Badge variant="secondary" className="mt-1 text-xs">{scenario.industry}</Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {scenario.description}
-                    </p>
-                    <div className="grid grid-cols-4 gap-2 text-xs">
-                      <div className="p-2 rounded bg-muted/50 text-center">
-                        <div className="font-semibold text-foreground">{scenario.inputs.activeUsers.toLocaleString()}</div>
-                        <div className="text-muted-foreground">Users</div>
-                      </div>
-                      <div className="p-2 rounded bg-muted/50 text-center">
-                        <div className="font-semibold text-foreground">{scenario.inputs.ptuHoursPerMonth}</div>
-                        <div className="text-muted-foreground">PTUs</div>
-                      </div>
-                      <div className="p-2 rounded bg-muted/50 text-center">
-                        <div className="font-semibold text-foreground">{scenario.inputs.githubCopilotSeats}</div>
-                        <div className="text-muted-foreground">GH Seats</div>
-                      </div>
-                      <div className="p-2 rounded bg-muted/50 text-center">
-                        <div className="font-semibold text-foreground">{scenario.inputs.hasMACC ? 'Yes' : 'No'}</div>
-                        <div className="text-muted-foreground">MACC</div>
-                      </div>
-                    </div>
-                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                      <p className="text-xs text-foreground leading-relaxed">
-                        <span className="font-semibold text-primary">Guidance: </span>
-                        {scenario.guidance}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="w-full gap-2"
-                      onClick={() => loadPreset(scenario.inputs)}
-                    >
-                      Load Scenario
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+      </div>
     </Layout>
   );
 }
